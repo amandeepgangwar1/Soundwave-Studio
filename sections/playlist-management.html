@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist Management | Soundwave Studio</title>
+    <link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../Cascading Style Sheets/app.css">
+</head>
+
+<body data-section="playlist">
+    <div class="shell">
+        <div class="topbar">
+            <div class="page-nav">
+                <a class="nav-btn" href="../player.html"><span class="symbol">‹</span>Back</a>
+            </div>
+            <div class="logo">
+                <img src="../img/soundwave.svg" alt="Soundwave">
+                <span>Soundwave Studio</span>
+            </div>
+            <div class="nav">
+                <a href="../home.html">Home</a>
+                <a class="active" href="playlist-management.html">Playlists</a>
+                <a href="../player.html">Player</a>
+            </div>
+            <div class="actions-end">
+                <button class="button ghost" id="logoutBtn">Logout</button>
+                <a class="nav-btn" href="history.html">Next<span class="symbol">›</span></a>
+            </div>
+        </div>
+
+        <section class="panel">
+            <div class="section-title">Playlist Management</div>
+            <div class="form-inline">
+                <input id="newPlaylistName" type="text" placeholder="New playlist name">
+                <button class="button" id="createPlaylistBtn">Create</button>
+            </div>
+            <div class="form-inline">
+                <select id="playlistSelect"></select>
+                <button class="button ghost" id="addToPlaylistBtn">Add Current</button>
+            </div>
+            <div class="list" id="playlistList"></div>
+            <div class="helper">To add a song, open the player and click Add Current.</div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        Made with love by Amandeep. All rights reserved to Amandeep
+    </footer>
+
+    <script src="../JavaScript/transition.js"></script>
+    <script src="../JavaScript/sections.js"></script>
+</body>
+
+</html>

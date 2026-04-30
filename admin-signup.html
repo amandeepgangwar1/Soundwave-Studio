@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign up | Soundwave Studio</title>
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="Cascading Style Sheets/app.css">
+</head>
+
+<body>
+    <div class="shell">
+        <div class="topbar">
+            <div class="logo">
+                <img src="img/soundwave.svg" alt="Soundwave">
+                <span>Soundwave Studio</span>
+            </div>
+            <div class="nav">
+                <a href="index.html">Home</a>
+                <a href="admin-login.html">Sign in</a>
+                <a class="active" href="admin-signup.html">Sign up</a>
+            </div>
+        </div>
+
+        <section class="hero">
+            <div>
+                <h1>Create your account.</h1>
+                <p>Create an account to manage playlists and songs.</p>
+            </div>
+            <div class="panel">
+                <form id="adminSignupForm" class="form auth-form">
+                    <div>
+                        <label>Name</label>
+                        <input type="text" name="name" required autocomplete="name">
+                    </div>
+                    <div>
+                        <label>Email</label>
+                        <input type="email" name="email" required autocomplete="email">
+                    </div>
+                    <div>
+                        <label>Password</label>
+                        <input type="password" name="password" required autocomplete="new-password" minlength="6">
+                    </div>
+                    <div class="error" id="adminSignupError"></div>
+                    <button class="button" type="submit">Create account</button>
+                    <div class="helper">Already have an account? <a href="admin-login.html">Login</a>.</div>
+                </form>
+            </div>
+        </section>
+    </div>
+    <footer class="footer">
+        Made with ❤️ by Amandeep. All rights reserved to Amandeep
+    </footer>
+
+    <script src="JavaScript/transition.js"></script>
+    <script src="JavaScript/auth.js"></script>
+</body>
+
+</html>

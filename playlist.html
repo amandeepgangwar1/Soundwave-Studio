@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist | Soundwave Studio</title>
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="Cascading Style Sheets/app.css">
+</head>
+
+<body>
+    <div class="shell">
+        <div class="topbar">
+            <div class="logo">
+                <img src="img/soundwave.svg" alt="Soundwave">
+                <span>Soundwave Studio</span>
+            </div>
+            <div class="nav">
+                <a href="home.html">Home</a>
+                <a href="library.html">Library</a>
+            </div>
+            <button class="button ghost" id="logoutBtn">Logout</button>
+        </div>
+
+        <section class="panel">
+            <div class="section-title" id="playlistTitle">Playlist</div>
+            <p class="muted" id="playlistDesc"></p>
+        </section>
+
+        <div class="section-title">Songs</div>
+        <div class="panel search-panel">
+            <img class="icon-svg search-icon" src="img/searchbar.svg" alt="">
+            <input id="songSearch" type="text" placeholder="Search songs...">
+        </div>
+        <div class="panel">
+            <div class="list" id="playlistSongs"></div>
+        </div>
+    </div>
+    <footer class="footer">
+        Made with ❤️ by Amandeep. All rights reserved to Amandeep
+    </footer>
+
+    <script src="JavaScript/transition.js"></script>
+    <script src="JavaScript/playlist.js"></script>
+</body>
+
+</html>

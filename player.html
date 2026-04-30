@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Now Playing | Soundwave Studio</title>
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="Cascading Style Sheets/app.css">
+</head>
+
+<body>
+    <div class="shell">
+        <div class="topbar">
+            <div class="page-nav">
+                <a class="nav-btn" href="home.html"><span class="symbol">‹</span>Back</a>
+            </div>
+            <div class="logo">
+                <img src="img/soundwave.svg" alt="Soundwave">
+                <span>Soundwave Studio</span>
+            </div>
+            <div class="nav">
+                <a href="home.html">Home</a>
+                <a href="library.html">Library</a>
+                <a class="active" href="player.html">Player</a>
+            </div>
+            <div class="actions-end">
+                <button class="button ghost" id="logoutBtn">Logout</button>
+                <a class="nav-btn" href="sections/playlist-management.html">Next<span class="symbol">›</span></a>
+            </div>
+        </div>
+
+        <div class="panel search-panel">
+            <img class="icon-svg search-icon" src="img/search.svg" alt="">
+            <input id="searchInput" type="text" placeholder="Search by song, artist, album">
+            <button class="button ghost small" id="voiceBtn">Voice</button>
+        </div>
+
+        <div class="dashboard">
+            <aside class="sidebar">
+                <div class="panel sidebar-card">
+                    <div class="section-title">Navigation</div>
+                    <a class="side-link active" href="player.html">Now Playing</a>
+                    <a class="side-link" href="home.html">Discover</a>
+                    <a class="side-link" href="library.html">Song Library</a>
+                    <a class="side-link" href="playlist.html">Playlists</a>
+                    <a class="side-link" href="admin.html">Admin Panel</a>
+                    <a class="side-link" href="#analytics">Analytics</a>
+                </div>
+
+                <section class="panel live-panel">
+                    <div class="section-title">Live & Location</div>
+                    <div class="muted" id="locationText">Location: Detecting...</div>
+                    <div class="list" id="localTrending"></div>
+                    <div class="toggle-row">
+                        <span class="muted">Offline Mode</span>
+                        <label class="toggle">
+                            <input id="offlineToggle" type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <button class="button ghost small" id="liveBtn">Start Live Stream</button>
+                </section>
+            </aside>
+
+            <main class="content">
+                <section class="panel player-stage">
+                    <div class="player-visual">
+                        <div class="pulse-ring"></div>
+                        <div class="pulse-ring ring-two"></div>
+                        <div class="pulse-ring ring-three"></div>
+                        <img class="album-art" id="albumArt" src="img/soundwave.svg" alt="Album art">
+                    </div>
+                    <div>
+                        <div class="section-title" id="trackTitle">Loading...</div>
+                        <p class="muted" id="trackMeta"></p>
+                        <div class="player-controls">
+                            <button class="icon-btn" id="prevBtn" aria-label="Previous">
+                                <img class="icon-svg" src="img/prevsong.svg" alt="">
+                            </button>
+                            <button class="icon-btn" id="playBtn" aria-label="Play or Pause">
+                                <img class="icon-svg" id="playIcon" src="img/play.svg" alt="">
+                            </button>
+                            <button class="icon-btn" id="nextBtn" aria-label="Next">
+                                <img class="icon-svg" src="img/nextsong.svg" alt="">
+                            </button>
+                        </div>
+                        <div class="control-row">
+                            <button class="pill-btn" id="shuffleBtn">Shuffle: Off</button>
+                            <button class="pill-btn" id="repeatBtn">Repeat: All</button>
+                            <button class="pill-btn" id="stopBtn">Stop</button>
+                            <button class="pill-btn" id="likeBtn">Favorite</button>
+                            <button class="pill-btn" id="shareBtn">Share</button>
+                            <a class="pill-btn" id="downloadBtn" href="#" download>Download</a>
+                        </div>
+                        <div class="seek-row">
+                            <img class="icon-svg seek-icon" src="img/seekbar.svg" alt="">
+                            <input id="seekRange" type="range" min="0" max="100" value="0">
+                        </div>
+                        <div class="volume-row">
+                            <button class="icon-btn" id="muteBtn" aria-label="Mute">
+                                <img class="icon-svg" id="volumeIcon" src="img/volume.svg" alt="">
+                            </button>
+                            <input id="volumeRange" type="range" min="0" max="100" value="80">
+                        </div>
+                        <div class="meta-row">
+                            <div class="muted" id="trackTime">00:00</div>
+                            <div class="muted" id="trackQuality">Quality: 320kbps</div>
+                            <div class="muted" id="playCounter">Plays: 0</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel" id="analytics">
+                    <div class="section-title">Analytics & Admin</div>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Plays</div>
+                            <div class="stat-value" id="statPlays">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Favorites</div>
+                            <div class="stat-value" id="statLikes">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Active Sessions</div>
+                            <div class="stat-value" id="statSessions">1</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Top Category</div>
+                            <div class="stat-value" id="statCategory">Trending</div>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <a class="button" href="admin.html">Open Admin Panel</a>
+                        <a class="button ghost" href="admin.html">Upload Songs</a>
+                    </div>
+                </section>
+
+            </main>
+
+            <aside class="rightbar">
+                <section class="panel">
+                    <div class="section-title">Up Next</div>
+                    <div class="list" id="queueList">
+                        <div class="list-item"><span id="nextTrack">-</span></div>
+                        <div class="list-item"><span id="upNextTrack">-</span></div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="section-title">Equalizer</div>
+                    <div class="eq-row">
+                        <label>Bass</label>
+                        <input id="bassRange" type="range" min="-12" max="12" value="0">
+                    </div>
+                    <div class="eq-row">
+                        <label>Treble</label>
+                        <input id="trebleRange" type="range" min="-12" max="12" value="0">
+                    </div>
+                </section>
+
+                <div class="actions">
+                    <a class="button ghost" href="sections/playlist-management.html">Open Playlist Page</a>
+                    <a class="button ghost" href="sections/history.html">Open History Page</a>
+                </div>
+
+            </aside>
+        </div>
+    </div>
+
+    <footer class="footer">
+        Made with love by Amandeep. All rights reserved to Amandeep
+    </footer>
+
+    <script src="JavaScript/transition.js"></script>
+    <script src="JavaScript/player.js"></script>
+</body>
+
+</html>

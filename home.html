@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | Soundwave Studio</title>
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="Cascading Style Sheets/app.css">
+</head>
+
+<body>
+    <div class="shell">
+        <div class="topbar">
+            <div class="page-nav">
+                <span class="nav-btn" aria-disabled="true"><span class="symbol">‹</span>Back</span>
+            </div>
+            <div class="logo">
+                <img src="img/soundwave.svg" alt="Soundwave">
+                <span>Soundwave Studio</span>
+            </div>
+            <div class="nav">
+                <a class="active" href="home.html">Home</a>
+                <a href="library.html">Library</a>
+                <a href="admin.html">Admin</a>
+            </div>
+            <div class="page-nav">
+                <button class="button ghost" id="logoutBtn">Logout</button>
+                <a class="nav-btn" href="player.html">Next<span class="symbol">›</span></a>
+            </div>
+        </div>
+
+        <section class="panel">
+            <div class="section-title">Hello <span id="userName">there</span></div>
+            <p class="muted">Pick a playlist, play songs, and save what you like.</p>
+        </section>
+
+        <div class="section-title">Playlists</div>
+        <div class="panel search-panel">
+            <img class="icon-svg search-icon" src="img/searchbar.svg" alt="">
+            <input id="playlistSearch" type="text" placeholder="Search playlists...">
+        </div>
+        <div class="grid" id="playlistGrid"></div>
+
+        <div class="section-title">Quick Actions</div>
+        <div class="panel">
+            <div class="list">
+                <div class="list-item"><span>Open a playlist to play songs with animation.</span></div>
+                <div class="list-item"><span>Save playlists or like songs to build your library.</span></div>
+            </div>
+        </div>
+
+        <div class="section-title">Profile & Theme</div>
+        <div class="grid two-col">
+            <section class="panel profile-card">
+                <div class="section-title">Profile</div>
+                <div class="profile-row">
+                    <div class="avatar" id="profileAvatar">SW</div>
+                    <div>
+                        <div class="profile-name" id="profileName">Loading...</div>
+                        <div class="muted profile-email" id="profileEmail"></div>
+                    </div>
+                </div>
+                <div class="profile-meta">
+                    <span class="tag" id="profilePlan">Free Plan</span>
+                    <span class="tag">JWT Secured</span>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="section-title">Theme</div>
+                <button class="button ghost full" id="themeToggle">Switch to Light</button>
+                <div class="helper" id="themeHint">Dark mode enabled</div>
+            </section>
+        </div>
+    </div>
+    <footer class="footer">
+        Made with ❤️ by Amandeep. All rights reserved to Amandeep
+    </footer>
+
+    <script src="JavaScript/transition.js"></script>
+    <script src="JavaScript/home.js"></script>
+</body>
+
+</html>

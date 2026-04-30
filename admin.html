@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Soundwave Studio</title>
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="Cascading Style Sheets/app.css">
+</head>
+
+<body>
+    <div class="shell">
+        <div class="topbar">
+            <div class="page-nav">
+                <a class="nav-btn" href="sections/history.html"><span class="symbol">‹</span>Back</a>
+            </div>
+            <div class="logo">
+                <img src="img/soundwave.svg" alt="Soundwave">
+                <span>Soundwave Studio</span>
+            </div>
+            <div class="nav">
+                <a href="home.html">Home</a>
+                <a href="library.html">Library</a>
+                <a class="active" href="admin.html">Admin</a>
+            </div>
+            <div class="page-nav">
+                <button class="button ghost" id="logoutBtn">Logout</button>
+                <span class="nav-btn" aria-disabled="true">Next<span class="symbol">›</span></span>
+            </div>
+        </div>
+
+        <section class="panel">
+            <div class="section-title">Admin Console</div>
+            <p class="muted" id="adminStatus">Checking sign-in...</p>
+        </section>
+
+        <div class="admin-tabs">
+            <button class="button ghost tab-btn active" data-tab="create">Create</button>
+            <button class="button ghost tab-btn" data-tab="manage">Manage</button>
+        </div>
+
+        <div class="grid admin-tab" data-tab="create">
+            <section class="panel">
+                <div class="section-title">Create Playlist</div>
+                <form class="form" id="createPlaylistForm">
+                    <label>
+                        Title
+                        <input type="text" name="title" placeholder="Playlist title" required>
+                    </label>
+                    <label>
+                        Description
+                        <input type="text" name="description" placeholder="Short description" required>
+                    </label>
+                    <label>
+                        Folder Name (optional)
+                        <input type="text" name="folder" placeholder="auto from title">
+                    </label>
+                    <div class="helper">Leave empty to auto-generate from title.</div>
+                    <label>
+                        Cover Image
+                        <input type="file" name="cover" accept="image/*" required hidden>
+                        <div class="dropzone" data-input="cover">Drop cover image here or click to choose.</div>
+                    </label>
+                    <button class="button" type="submit">Create Playlist</button>
+                    <div class="progress" id="createPlaylistProgress" aria-hidden="true">
+                        <div class="progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="helper" id="createPlaylistMsg"></div>
+                </form>
+            </section>
+
+            <section class="panel">
+                <div class="section-title">Add Song</div>
+                <form class="form" id="addSongForm">
+                    <label>
+                        Playlist
+                        <select name="playlistId" id="playlistSelect" required></select>
+                    </label>
+                    <label>
+                        Audio Files
+                        <input type="file" name="audio" accept="audio/*" multiple required hidden>
+                        <div class="dropzone" data-input="audio">Drop audio files here or click to choose.</div>
+                    </label>
+                    <label>
+                        Cover Images (optional)
+                        <input type="file" name="cover" accept="image/*" multiple hidden>
+                        <div class="dropzone" data-input="cover">Drop cover images here or click to choose.</div>
+                    </label>
+                    <div class="helper">If you upload covers, their base names should match the audio file names.</div>
+                    <button class="button" type="submit">Upload Song</button>
+                    <div class="progress" id="addSongProgress" aria-hidden="true">
+                        <div class="progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="helper" id="addSongMsg"></div>
+                </form>
+            </section>
+        </div>
+
+        <div class="grid admin-tab hidden" data-tab="manage">
+            <section class="panel">
+                <div class="section-title">Manage Playlists</div>
+                <div class="list" id="playlistAdminList"></div>
+            </section>
+
+            <section class="panel">
+                <div class="section-title">Edit Playlist</div>
+                <form class="form" id="editPlaylistForm">
+                    <input type="hidden" name="playlistId" id="editPlaylistId">
+                    <label>
+                        Title
+                        <input type="text" name="title" id="editPlaylistTitle" required>
+                    </label>
+                    <label>
+                        Description
+                        <input type="text" name="description" id="editPlaylistDesc" required>
+                    </label>
+                    <label>
+                        Replace Cover (optional)
+                        <input type="file" name="cover" accept="image/*" hidden>
+                        <div class="dropzone" data-input="cover">Drop cover image here or click to choose.</div>
+                    </label>
+                    <button class="button" type="submit">Save Changes</button>
+                    <div class="progress" id="editPlaylistProgress" aria-hidden="true">
+                        <div class="progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="helper" id="editPlaylistMsg"></div>
+                </form>
+            </section>
+        </div>
+
+        <section class="panel admin-tab hidden" data-tab="manage">
+            <div class="section-title">Manage Songs</div>
+            <div class="actions">
+                <label class="select-field">
+                    Playlist
+                    <select id="managePlaylistSelect"></select>
+                </label>
+            </div>
+            <div class="list" id="songAdminList"></div>
+        </section>
+
+    </div>
+    <footer class="footer">
+        Made with ❤️ by Amandeep. All rights reserved to Amandeep
+    </footer>
+
+    <script src="JavaScript/transition.js"></script>
+    <script src="JavaScript/admin.js"></script>
+</body>
+
+</html>

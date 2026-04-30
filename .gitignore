@@ -1,0 +1,8 @@
+node_modules/
+server/node_modules/
+.env
+server/.env
+.netlify/
+dist/
+build/
+npm-debug.log*
