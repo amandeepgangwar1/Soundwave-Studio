@@ -29,16 +29,26 @@ function renderPlaylist(playlist) {
   list.innerHTML = "";
 
   playlist.songs
-    .filter((song) => song.filename.toLowerCase().includes(query))
+    .filter((song) => `${song.title || song.filename} ${song.artistName || ""} ${song.albumTitle || ""}`.toLowerCase().includes(query))
     .forEach((song) => {
     const item = document.createElement("div");
     item.className = "list-item";
     item.innerHTML = `
-      <span>${song.filename}</span>
+      <span>${song.title || song.filename} <span class="muted">- ${song.artistName || playlist.title}</span></span>
       <div class="actions-end">
+        <button class="button ghost" data-action="like">Like</button>
         <button class="button ghost" data-action="play">Play</button>
       </div>
     `;
+
+    item.querySelector('[data-action="like"]').addEventListener("click", async (event) => {
+      event.stopPropagation();
+      const res = await fetch(`/api/library/songs/${song.id}/toggle`, {
+        method: "POST",
+        credentials: "include"
+      });
+      if (res.ok) event.currentTarget.textContent = "Liked";
+    });
 
     item.querySelector('[data-action="play"]').addEventListener("click", (event) => {
       event.stopPropagation();

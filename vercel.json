@@ -1,0 +1,10 @@
+{
+  "installCommand": "npm --prefix server install",
+  "buildCommand": "echo \"No build step required\"",
+  "functions": {
+    "api/[...path].js": {
+      "includeFiles": "songs/**/info.json",
+      "maxDuration": 30
+    }
+  }
+}

@@ -21,7 +21,10 @@
             </div>
             <div class="nav">
                 <a href="home.html">Home</a>
+                <a href="search.html">Search</a>
+                <a href="artists.html">Artists</a>
                 <a href="library.html">Library</a>
+                <a href="premium.html">Premium</a>
                 <a class="active" href="admin.html">Admin</a>
             </div>
             <div class="page-nav">
@@ -38,6 +41,9 @@
         <div class="admin-tabs">
             <button class="button ghost tab-btn active" data-tab="create">Create</button>
             <button class="button ghost tab-btn" data-tab="manage">Manage</button>
+            <button class="button ghost tab-btn" data-tab="users">Users</button>
+            <button class="button ghost tab-btn" data-tab="artists">Artists</button>
+            <button class="button ghost tab-btn" data-tab="reports">Reports</button>
         </div>
 
         <div class="grid admin-tab" data-tab="create">
@@ -140,11 +146,52 @@
             <div class="list" id="songAdminList"></div>
         </section>
 
+        <section class="panel admin-tab hidden" data-tab="users">
+            <div class="section-title">Manage Users</div>
+            <div class="list" id="userAdminList"></div>
+        </section>
+
+        <div class="grid admin-tab hidden" data-tab="artists">
+            <section class="panel">
+                <div class="section-title">Create Artist</div>
+                <form class="form" id="artistForm">
+                    <input type="hidden" name="artistId" id="artistId">
+                    <label>
+                        Name
+                        <input type="text" name="name" id="artistName" required>
+                    </label>
+                    <label>
+                        Bio
+                        <input type="text" name="bio" id="artistBio">
+                    </label>
+                    <label>
+                        Image URL
+                        <input type="text" name="imageUrl" id="artistImageUrl" placeholder="/img/music.svg">
+                    </label>
+                    <button class="button" type="submit">Save Artist</button>
+                    <div class="helper" id="artistMsg"></div>
+                </form>
+            </section>
+
+            <section class="panel">
+                <div class="section-title">Manage Artists</div>
+                <div class="list" id="artistAdminList"></div>
+            </section>
+        </div>
+
+        <section class="panel admin-tab hidden" data-tab="reports">
+            <div class="section-title">Reports</div>
+            <div class="stat-grid" id="reportStats"></div>
+            <div class="section-title">Top Songs</div>
+            <div class="list" id="topSongsReport"></div>
+        </section>
+
     </div>
     <footer class="footer">
         Made with ❤️ by Amandeep. All rights reserved to Amandeep
     </footer>
 
+    <script src="JavaScript/navigation.js"></script>
     <script src="JavaScript/transition.js"></script>
     <script src="JavaScript/admin.js"></script>
 </body>

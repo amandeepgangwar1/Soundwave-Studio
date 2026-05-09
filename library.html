@@ -18,7 +18,10 @@
             </div>
             <div class="nav">
                 <a href="home.html">Home</a>
+                <a href="search.html">Search</a>
+                <a href="artists.html">Artists</a>
                 <a class="active" href="library.html">Library</a>
+                <a href="premium.html">Premium</a>
                 <a href="admin.html">Admin</a>
             </div>
             <button class="button ghost" id="logoutBtn">Logout</button>
@@ -36,11 +39,27 @@
         <div class="panel">
             <div class="list" id="likedSongs"></div>
         </div>
+
+        <div class="section-title">Your Playlists</div>
+        <div class="panel">
+            <div class="list" id="userPlaylists"></div>
+        </div>
+
+        <div class="section-title">Followed Artists</div>
+        <div class="panel">
+            <div class="list" id="followedArtists"></div>
+        </div>
+
+        <div class="section-title">Downloaded Songs</div>
+        <div class="panel">
+            <div class="list" id="downloadedSongs"></div>
+        </div>
     </div>
     <footer class="footer">
         Made with ❤️ by Amandeep. All rights reserved to Amandeep
     </footer>
 
+    <script src="JavaScript/navigation.js"></script>
     <script src="JavaScript/transition.js"></script>
     <script src="JavaScript/library.js"></script>
 </body>

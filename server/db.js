@@ -15,6 +15,9 @@ const userSchema = new mongoose.Schema({
   userId: { type: Number, required: true, unique: true },
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  phone: { type: String, default: "" },
+  authProvider: { type: String, default: "email" },
+  subscriptionType: { type: String, default: "free" },
   passwordHash: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });
@@ -34,11 +37,39 @@ const playlistSchema = new mongoose.Schema({
   cover: { type: String, required: true }
 });
 
+const artistSchema = new mongoose.Schema({
+  artistId: { type: Number, required: true, unique: true },
+  name: { type: String, required: true, unique: true },
+  bio: { type: String, default: "" },
+  imageUrl: { type: String, default: "/img/music.svg" },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const albumSchema = new mongoose.Schema({
+  albumId: { type: Number, required: true, unique: true },
+  title: { type: String, required: true },
+  artistId: { type: Number, default: null },
+  releaseDate: { type: Date, default: null },
+  coverImage: { type: String, default: "" },
+  createdAt: { type: Date, default: Date.now }
+});
+
 const songSchema = new mongoose.Schema({
   songId: { type: Number, required: true, unique: true },
   playlistId: { type: Number, required: true },
+  title: { type: String, default: "" },
+  artistId: { type: Number, default: null },
+  albumId: { type: Number, default: null },
+  genre: { type: String, default: "Music" },
+  duration: { type: Number, default: 0 },
+  fileUrl: { type: String, default: "" },
   filename: { type: String, required: true },
-  trackNumber: { type: Number, required: true }
+  trackNumber: { type: Number, required: true },
+  embedding: { type: [Number], default: undefined },
+  embeddingModel: { type: String, default: "" },
+  embeddingDimensions: { type: Number, default: 0 },
+  embeddingText: { type: String, default: "" },
+  embeddingUpdatedAt: { type: Date, default: null }
 });
 
 const libraryPlaylistSchema = new mongoose.Schema({
@@ -55,6 +86,50 @@ const likedSongSchema = new mongoose.Schema({
 });
 likedSongSchema.index({ userId: 1, songId: 1 }, { unique: true });
 
+const followedArtistSchema = new mongoose.Schema({
+  userId: { type: Number, required: true },
+  artistId: { type: Number, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+followedArtistSchema.index({ userId: 1, artistId: 1 }, { unique: true });
+
+const userPlaylistSchema = new mongoose.Schema({
+  userPlaylistId: { type: Number, required: true, unique: true },
+  userId: { type: Number, required: true },
+  name: { type: String, required: true },
+  description: { type: String, default: "" },
+  isShared: { type: Boolean, default: false },
+  shareToken: { type: String, default: "" },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const userPlaylistSongSchema = new mongoose.Schema({
+  userPlaylistId: { type: Number, required: true },
+  userId: { type: Number, required: true },
+  songId: { type: Number, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+userPlaylistSongSchema.index(
+  { userPlaylistId: 1, songId: 1 },
+  { unique: true }
+);
+
+const paymentSchema = new mongoose.Schema({
+  paymentId: { type: Number, required: true, unique: true },
+  userId: { type: Number, required: true },
+  plan: { type: String, required: true },
+  amount: { type: Number, required: true },
+  currency: { type: String, default: "INR" },
+  method: { type: String, required: true },
+  gateway: { type: String, default: "razorpay" },
+  gatewayOrderId: { type: String, default: "" },
+  gatewayPaymentId: { type: String, default: "" },
+  gatewaySignature: { type: String, default: "" },
+  paymentStatus: { type: String, default: "created" },
+  paymentDate: { type: Date, default: Date.now }
+});
+
 const adminUserSchema = new mongoose.Schema({
   userId: { type: Number, required: true, unique: true },
   createdAt: { type: Date, default: Date.now }
@@ -69,9 +144,15 @@ const Counter = mongoose.model("Counter", counterSchema);
 const User = mongoose.model("User", userSchema);
 const Session = mongoose.model("Session", sessionSchema);
 const Playlist = mongoose.model("Playlist", playlistSchema);
+const Artist = mongoose.model("Artist", artistSchema);
+const Album = mongoose.model("Album", albumSchema);
 const Song = mongoose.model("Song", songSchema);
 const LibraryPlaylist = mongoose.model("LibraryPlaylist", libraryPlaylistSchema);
 const LikedSong = mongoose.model("LikedSong", likedSongSchema);
+const FollowedArtist = mongoose.model("FollowedArtist", followedArtistSchema);
+const UserPlaylist = mongoose.model("UserPlaylist", userPlaylistSchema);
+const UserPlaylistSong = mongoose.model("UserPlaylistSong", userPlaylistSongSchema);
+const Payment = mongoose.model("Payment", paymentSchema);
 const AdminUser = mongoose.model("AdminUser", adminUserSchema);
 const AdminRequest = mongoose.model("AdminRequest", adminRequestSchema);
 
@@ -132,6 +213,7 @@ async function seedIfEmpty() {
       await Song.create({
         songId,
         playlistId,
+        fileUrl: `/songs/${folder}/${filename}`,
         filename,
         trackNumber: track
       });
@@ -148,9 +230,15 @@ module.exports = {
     User,
     Session,
     Playlist,
+    Artist,
+    Album,
     Song,
     LibraryPlaylist,
     LikedSong,
+    FollowedArtist,
+    UserPlaylist,
+    UserPlaylistSong,
+    Payment,
     AdminUser,
     AdminRequest,
     Counter

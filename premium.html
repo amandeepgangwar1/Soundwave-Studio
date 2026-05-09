@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium | Soundwave Studio</title>
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="Cascading Style Sheets/app.css">
+</head>
+
+<body>
+    <div class="shell">
+        <div class="topbar">
+            <div class="logo">
+                <img src="img/soundwave.svg" alt="Soundwave">
+                <span>Soundwave Studio</span>
+            </div>
+            <div class="nav">
+                <a href="home.html">Home</a>
+                <a href="search.html">Search</a>
+                <a href="artists.html">Artists</a>
+                <a href="library.html">Library</a>
+                <a class="active" href="premium.html">Premium</a>
+            </div>
+            <button class="button ghost" id="logoutBtn">Logout</button>
+        </div>
+
+        <section class="panel">
+            <div class="section-title">Premium</div>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Current Plan</div>
+                    <div class="stat-value" id="currentPlan">Loading</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Premium Features</div>
+                    <div class="stat-value">4</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid plan-grid">
+            <section class="panel plan-card active-plan" data-plan="monthly">
+                <div class="section-title">Monthly</div>
+                <div class="price">Rs 119</div>
+                <div class="mini-list">
+                    <div>No ads</div>
+                    <div>Offline listening</div>
+                    <div>High-quality audio</div>
+                    <div>Unlimited skips</div>
+                </div>
+                <button class="button full" data-action="select-plan">Choose Monthly</button>
+            </section>
+
+            <section class="panel plan-card" data-plan="yearly">
+                <div class="section-title">Yearly</div>
+                <div class="price">Rs 1188</div>
+                <div class="mini-list">
+                    <div>All monthly features</div>
+                    <div>Lower effective monthly price</div>
+                    <div>Priority support</div>
+                    <div>Family-ready library controls</div>
+                </div>
+                <button class="button full" data-action="select-plan">Choose Yearly</button>
+            </section>
+
+            <section class="panel plan-card" data-plan="student">
+                <div class="section-title">Student</div>
+                <div class="price">Rs 59</div>
+                <div class="mini-list">
+                    <div>Ad-free streaming</div>
+                    <div>Offline listening</div>
+                    <div>High-quality audio</div>
+                    <div>Unlimited skips</div>
+                </div>
+                <button class="button full" data-action="select-plan">Choose Student</button>
+            </section>
+        </div>
+
+        <section class="panel payment-panel">
+            <div class="section-title">Payment</div>
+            <form class="form payment-form" id="paymentForm">
+                <input type="hidden" name="plan" id="selectedPlan" value="monthly">
+                <div class="gateway-banner">
+                    <div>
+                        <div class="mini-title">Soundwave Test Gateway</div>
+                        <div class="helper">Works locally without Razorpay or Stripe. Use it to activate Premium in this project.</div>
+                    </div>
+                    <span class="tag">Test Mode</span>
+                </div>
+                <label>
+                    Payment Method
+                    <select name="method" required>
+                        <option value="upi">UPI</option>
+                        <option value="debit-card">Debit card</option>
+                        <option value="credit-card">Credit card</option>
+                        <option value="net-banking">Net banking</option>
+                        <option value="wallet">Wallets</option>
+                    </select>
+                </label>
+                <label>
+                    Payment ID
+                    <input type="text" name="paymentReference" id="paymentReference" placeholder="UPI ID, card last 4, bank ref, or wallet id" required>
+                </label>
+                <button class="button" type="submit">Buy Premium</button>
+                <div class="helper" id="paymentMessage"></div>
+            </form>
+        </section>
+
+        <section class="panel">
+            <div class="section-title">Payment History</div>
+            <div class="list" id="paymentHistory"></div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        Made with love by Amandeep. All rights reserved to Amandeep
+    </footer>
+
+    <script src="JavaScript/navigation.js"></script>
+    <script src="JavaScript/transition.js"></script>
+    <script src="JavaScript/premium.js"></script>
+</body>
+
+</html>

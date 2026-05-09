@@ -37,3 +37,14 @@ handleAuth("loginForm", "/api/auth/login", "loginError");
 handleAuth("signupForm", "/api/auth/signup", "signupError");
 handleAuth("adminLoginForm", "/api/admin/login", "adminLoginError", "/admin.html");
 handleAuth("adminSignupForm", "/api/admin/signup", "adminSignupError", "/admin.html");
+
+document.querySelectorAll("[data-provider]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const providerInput = document.getElementById("signupProvider");
+    if (!providerInput) return;
+    providerInput.value = button.dataset.provider || "email";
+    document.querySelectorAll("[data-provider]").forEach((item) => {
+      item.classList.toggle("active", item === button);
+    });
+  });
+});

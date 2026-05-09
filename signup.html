@@ -30,17 +30,26 @@
             </div>
             <div class="panel">
                 <form id="signupForm" class="form auth-form">
+                    <input type="hidden" name="provider" id="signupProvider" value="email">
                     <div>
                         <label>Name</label>
                         <input type="text" name="name" required autocomplete="name">
                     </div>
                     <div>
                         <label>Email</label>
-                        <input type="email" name="email" required autocomplete="email">
+                        <input type="email" name="email" autocomplete="email" placeholder="Email or use phone">
+                    </div>
+                    <div>
+                        <label>Phone</label>
+                        <input type="tel" name="phone" autocomplete="tel" placeholder="Phone signup supported">
                     </div>
                     <div>
                         <label>Password</label>
                         <input type="password" name="password" required autocomplete="new-password" minlength="6">
+                    </div>
+                    <div class="social-auth">
+                        <button class="button ghost" type="button" data-provider="google">Use Google account</button>
+                        <button class="button ghost" type="button" data-provider="facebook">Use Facebook account</button>
                     </div>
                     <div class="error" id="signupError"></div>
                     <button class="button" type="submit">Create account</button>
@@ -53,6 +62,7 @@
         Made with ❤️ by Amandeep. All rights reserved to Amandeep
     </footer>
 
+    <script src="JavaScript/navigation.js"></script>
     <script src="JavaScript/transition.js"></script>
     <script src="JavaScript/auth.js"></script>
 </body>

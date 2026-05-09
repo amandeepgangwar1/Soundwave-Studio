@@ -161,6 +161,18 @@ async function init() {
   const playCounts = getJSON("sw_play_counts", {});
   const history = getJSON("sw_history", []);
   const savedPlaylists = getJSON("sw_playlists", []);
+  const isPremium = user.subscriptionType && user.subscriptionType !== "free";
+  let serverLikedSongIds = new Set();
+
+  try {
+    const libraryRes = await fetch("/api/library", { credentials: "include" });
+    if (libraryRes.ok) {
+      const library = await libraryRes.json();
+      serverLikedSongIds = new Set((library.songs || []).map((song) => song.id));
+    }
+  } catch (err) {
+    serverLikedSongIds = new Set();
+  }
 
   let isShuffle = false;
   let repeatMode = "all";
@@ -208,8 +220,8 @@ async function init() {
     if (!songs.length) return;
     const nextIndex = getNextIndex(index, false);
     const upNextIndex = getNextIndex(nextIndex, false);
-    nextTrackEl.textContent = songs[nextIndex]?.filename || "-";
-    upNextTrackEl.textContent = songs[upNextIndex]?.filename || "-";
+    nextTrackEl.textContent = songs[nextIndex]?.title || songs[nextIndex]?.filename || "-";
+    upNextTrackEl.textContent = songs[upNextIndex]?.title || songs[upNextIndex]?.filename || "-";
     if (nextTrackEl?.parentElement) {
       nextTrackEl.parentElement.dataset.index = String(nextIndex);
     }
@@ -225,32 +237,44 @@ async function init() {
   function updateLikeState(song) {
     if (!song) return;
     const key = getSongKey(song);
-    const isLiked = Boolean(likes[key]);
+    const isLiked = serverLikedSongIds.has(song.id) || Boolean(likes[key]);
     likeBtn.textContent = isLiked ? "Favorited" : "Favorite";
     likeBtn.classList.toggle("active", isLiked);
   }
 
   function updateStats() {
     const totalPlays = Object.values(playCounts).reduce((sum, val) => sum + Number(val || 0), 0);
-    const totalLikes = Object.keys(likes).length;
+    const totalLikes = Math.max(Object.keys(likes).length, serverLikedSongIds.size);
     statPlays.textContent = totalPlays;
     statLikes.textContent = totalLikes;
   }
 
   function setTrackMeta(song) {
     if (!song) return;
-    const metaInfo = parseSongMeta(song.filename);
+    const fallback = parseSongMeta(song.filename);
+    const metaInfo = {
+      title: song.title || fallback.title,
+      artist: song.artistName || fallback.artist,
+      album: song.albumTitle || song.playlistTitle || fallback.album
+    };
     title.textContent = metaInfo.title;
-    meta.textContent = `${metaInfo.artist} · ${metaInfo.album}`;
+    meta.textContent = `${metaInfo.artist} - ${metaInfo.album}`;
   }
 
   function pushHistory(song) {
-    const metaInfo = parseSongMeta(song.filename);
+    const fallback = parseSongMeta(song.filename);
+    const metaInfo = {
+      title: song.title || fallback.title,
+      artist: song.artistName || fallback.artist
+    };
     const entry = {
       key: getSongKey(song),
+      songId: song.id,
+      playlistId: playlistId,
       title: metaInfo.title,
       artist: metaInfo.artist,
       filename: song.filename,
+      fileUrl: song.fileUrl || audio.src,
       playedAt: new Date().toISOString()
     };
     const updated = [entry, ...history.filter((item) => item.key !== entry.key)].slice(0, 30);
@@ -287,9 +311,14 @@ async function init() {
 
     libraryList.innerHTML = filtered
       .map((song, idx) => {
-        const metaInfo = parseSongMeta(song.filename);
+        const fallback = parseSongMeta(song.filename);
+        const metaInfo = {
+          title: song.title || fallback.title,
+          artist: song.artistName || fallback.artist,
+          album: song.albumTitle || fallback.album
+        };
         const key = getSongKey(song);
-        const liked = Boolean(likes[key]);
+        const liked = serverLikedSongIds.has(song.id) || Boolean(likes[key]);
         return `
           <div class="list-item">
             <span>${metaInfo.title}</span>
@@ -308,9 +337,9 @@ async function init() {
       categoryGrid.innerHTML = '<div class="mini-card"><div class="mini-title">Trending</div><div class="mini-list">No songs available.</div></div>';
       return;
     }
-    const topHits = songs.slice(0, 3).map((song) => parseSongMeta(song.filename).title);
-    const latest = songs.slice(-3).map((song) => parseSongMeta(song.filename).title);
-    const trending = songs.slice(1, 4).map((song) => parseSongMeta(song.filename).title);
+    const topHits = songs.slice(0, 3).map((song) => song.title || parseSongMeta(song.filename).title);
+    const latest = songs.slice(-3).map((song) => song.title || parseSongMeta(song.filename).title);
+    const trending = songs.slice(1, 4).map((song) => song.title || parseSongMeta(song.filename).title);
 
     categoryGrid.innerHTML = `
       <div class="mini-card">
@@ -346,7 +375,11 @@ async function init() {
 
     recommendList.innerHTML = sorted
       .map((song) => {
-        const metaInfo = parseSongMeta(song.filename);
+        const fallback = parseSongMeta(song.filename);
+        const metaInfo = {
+          title: song.title || fallback.title,
+          artist: song.artistName || fallback.artist
+        };
         return `
           <div class="card card-compact">
             <div class="card-title">${metaInfo.title}</div>
@@ -415,7 +448,17 @@ async function init() {
     renderRecommendations();
     updateQueue();
 
-    downloadBtn.href = audio.src;
+    if (downloadBtn) {
+      if (isPremium) {
+        downloadBtn.href = audio.src;
+        downloadBtn.setAttribute("download", "");
+        downloadBtn.textContent = "Download";
+      } else {
+        downloadBtn.href = "premium.html";
+        downloadBtn.removeAttribute("download");
+        downloadBtn.textContent = "Premium Download";
+      }
+    }
     ensureAudioContext();
     audio.play().catch(() => {});
     playIcon.src = "img/pause.svg";
@@ -481,14 +524,29 @@ async function init() {
     repeatBtn.classList.toggle("active", repeatMode !== "off");
   }
 
-  function toggleLike() {
+  async function toggleLike() {
     if (!songs.length) return;
     const current = songs[index];
     const key = getSongKey(current);
-    if (likes[key]) {
-      delete likes[key];
-    } else {
+    let liked = !serverLikedSongIds.has(current.id) && !likes[key];
+
+    if (current.id) {
+      const res = await fetch(`/api/library/songs/${current.id}/toggle`, {
+        method: "POST",
+        credentials: "include"
+      });
+      if (res.ok) {
+        const data = await res.json();
+        liked = data.liked;
+      }
+    }
+
+    if (liked) {
       likes[key] = true;
+      serverLikedSongIds.add(current.id);
+    } else {
+      delete likes[key];
+      serverLikedSongIds.delete(current.id);
     }
     setJSON("sw_likes", likes);
     updateLikeState(current);
@@ -503,7 +561,7 @@ async function init() {
     renderLibrary(searchInput.value);
   }
 
-  function handleLibraryClick(event) {
+  async function handleLibraryClick(event) {
     if (!libraryList) return;
     const btn = event.target.closest("button");
     if (!btn) return;
@@ -517,10 +575,23 @@ async function init() {
     if (action === "like") {
       const song = songs[idx];
       const key = getSongKey(song);
-      if (likes[key]) {
-        delete likes[key];
-      } else {
+      let liked = !serverLikedSongIds.has(song.id) && !likes[key];
+      if (song.id) {
+        const res = await fetch(`/api/library/songs/${song.id}/toggle`, {
+          method: "POST",
+          credentials: "include"
+        });
+        if (res.ok) {
+          const data = await res.json();
+          liked = data.liked;
+        }
+      }
+      if (liked) {
         likes[key] = true;
+        serverLikedSongIds.add(song.id);
+      } else {
+        delete likes[key];
+        serverLikedSongIds.delete(song.id);
       }
       setJSON("sw_likes", likes);
       if (searchInput) {
@@ -566,6 +637,27 @@ async function init() {
         shareBtn.textContent = "Share";
       }, 1500);
     }
+  }
+
+  function rememberDownload(event) {
+    if (!songs.length) return;
+    if (!isPremium) {
+      event.preventDefault();
+      window.location.href = "/premium.html";
+      return;
+    }
+    const current = songs[index];
+    const fallback = parseSongMeta(current.filename);
+    const entry = {
+      songId: current.id,
+      title: current.title || fallback.title,
+      artistName: current.artistName || fallback.artist,
+      fileUrl: audio.src,
+      downloadedAt: new Date().toISOString()
+    };
+    const downloads = getJSON("sw_downloads", []);
+    const updated = [entry, ...downloads.filter((item) => item.songId !== entry.songId)].slice(0, 50);
+    setJSON("sw_downloads", updated);
   }
 
   function setupPlaylistManagement() {
@@ -634,7 +726,7 @@ async function init() {
       localTrending.innerHTML = '<div class="list-item"><span>No local trends yet.</span></div>';
       return;
     }
-    const picks = songs.slice(0, 3).map((song) => parseSongMeta(song.filename).title);
+    const picks = songs.slice(0, 3).map((song) => song.title || parseSongMeta(song.filename).title);
     localTrending.innerHTML = picks
       .map((title, idx) => `<div class="list-item" data-index="${idx}"><span>${title}</span></div>`)
       .join("");
@@ -642,6 +734,14 @@ async function init() {
 
   function setupOfflineToggle() {
     if (!offlineToggle) return;
+    if (!isPremium) {
+      offlineToggle.checked = false;
+      offlineToggle.addEventListener("change", () => {
+        offlineToggle.checked = false;
+        window.location.href = "/premium.html";
+      });
+      return;
+    }
     const stored = localStorage.getItem("sw_offline") === "true";
     offlineToggle.checked = stored;
     offlineToggle.addEventListener("change", () => {
@@ -685,6 +785,7 @@ async function init() {
   on(repeatBtn, "click", toggleRepeat);
   on(likeBtn, "click", toggleLike);
   on(shareBtn, "click", handleShare);
+  on(downloadBtn, "click", rememberDownload);
 
   on(volumeRange, "input", () => {
     audio.volume = Number(volumeRange.value) / 100;

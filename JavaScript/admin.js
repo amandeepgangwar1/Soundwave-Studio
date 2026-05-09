@@ -21,6 +21,14 @@ function setMessage(el, message, isError = false) {
   el.className = isError ? "error" : "helper";
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function showProgress(progressEl, percent) {
   if (!progressEl) return;
   progressEl.style.display = "block";
@@ -149,6 +157,30 @@ async function loadSongs(playlistId) {
   return res.json();
 }
 
+async function loadUsers() {
+  const res = await fetch("/api/admin/users", { credentials: "include" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+async function loadArtists() {
+  const res = await fetch("/api/admin/artists", { credentials: "include" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+async function loadAlbums() {
+  const res = await fetch("/api/admin/albums", { credentials: "include" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+async function loadReports() {
+  const res = await fetch("/api/admin/reports", { credentials: "include" });
+  if (!res.ok) return null;
+  return res.json();
+}
+
 function renderPlaylistAdminList(playlists) {
   const list = document.getElementById("playlistAdminList");
   list.innerHTML = "";
@@ -223,14 +255,27 @@ function renderSongAdminList(songs) {
   songs.forEach((song) => {
     const item = document.createElement("div");
     item.className = "list-item";
+    const artistOptions = cachedArtists
+      .map((artist) => `<option value="${artist.id}" ${artist.id === song.artistId ? "selected" : ""}>${escapeHtml(artist.name)}</option>`)
+      .join("");
+    const albumOptions = cachedAlbums
+      .map((album) => `<option value="${album.id}" ${album.id === song.albumId ? "selected" : ""}>${escapeHtml(album.title)}</option>`)
+      .join("");
     item.innerHTML = `
-      <span>${song.filename}</span>
+      <span>${escapeHtml(song.title || song.filename)} <span class="muted">- ${escapeHtml(song.artistName || song.filename)}</span></span>
       <div class="actions-end">
         <input type="file" accept="audio/*" data-action="audio" hidden>
         <input type="file" accept="image/*" data-action="cover" hidden>
         <button class="button ghost" data-action="replace-audio">Replace Audio</button>
         <button class="button ghost" data-action="replace">Replace Cover</button>
         <button class="button ghost" data-action="delete">Delete</button>
+      </div>
+      <div class="admin-song-edit">
+        <input type="text" data-field="title" value="${escapeHtml(song.title || "")}" placeholder="Song title">
+        <input type="text" data-field="genre" value="${escapeHtml(song.genre || "Music")}" placeholder="Genre">
+        <select data-field="artistId">${artistOptions}</select>
+        <select data-field="albumId">${albumOptions}</select>
+        <button class="button ghost" data-action="save-meta">Save Details</button>
       </div>
     `;
 
@@ -278,14 +323,169 @@ function renderSongAdminList(songs) {
       await refreshSongs();
     });
 
+    item.querySelector('[data-action="save-meta"]').addEventListener("click", async () => {
+      const formData = new FormData();
+      item.querySelectorAll("[data-field]").forEach((field) => {
+        formData.append(field.dataset.field, field.value);
+      });
+      try {
+        await uploadWithProgress(`/api/admin/songs/${song.id}`, "PATCH", formData, progress);
+        await refreshSongs();
+      } catch (err) {
+        // ignore
+      }
+    });
+
     list.appendChild(item);
   });
 }
 
+function renderUserAdminList(users) {
+  const list = document.getElementById("userAdminList");
+  if (!list) return;
+  if (!users.length) {
+    list.innerHTML = `<div class="muted">No users yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = "";
+  users.forEach((user) => {
+    const item = document.createElement("div");
+    item.className = "list-item";
+    item.innerHTML = `
+      <span>${escapeHtml(user.name)} <span class="muted">- ${escapeHtml(user.email)}</span></span>
+      <div class="actions-end">
+        <select data-field="subscriptionType">
+          <option value="free" ${user.subscriptionType === "free" ? "selected" : ""}>Free</option>
+          <option value="premium-monthly" ${user.subscriptionType === "premium-monthly" ? "selected" : ""}>Premium Monthly</option>
+          <option value="premium-yearly" ${user.subscriptionType === "premium-yearly" ? "selected" : ""}>Premium Yearly</option>
+          <option value="student" ${user.subscriptionType === "student" ? "selected" : ""}>Student</option>
+        </select>
+        <label class="inline-check">
+          <input type="checkbox" data-field="isAdmin" ${user.isAdmin ? "checked" : ""}>
+          Admin
+        </label>
+        <button class="button ghost" data-action="save">Save</button>
+        <button class="button ghost" data-action="delete">Delete</button>
+      </div>
+    `;
+
+    item.querySelector('[data-action="save"]').addEventListener("click", async () => {
+      const payload = {
+        subscriptionType: item.querySelector('[data-field="subscriptionType"]').value,
+        isAdmin: item.querySelector('[data-field="isAdmin"]').checked
+      };
+      await fetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload)
+      });
+      await refreshUsers();
+    });
+
+    item.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+      if (!confirm(`Delete user "${user.email}"?`)) return;
+      await fetch(`/api/admin/users/${user.id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      await refreshUsers();
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function renderArtistAdminList(artists) {
+  const list = document.getElementById("artistAdminList");
+  if (!list) return;
+  if (!artists.length) {
+    list.innerHTML = `<div class="muted">No artists yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = artists.map((artist) => `
+    <div class="list-item" data-id="${artist.id}">
+      <span>${escapeHtml(artist.name)} <span class="muted">- ${artist.songCount || 0} songs</span></span>
+      <div class="actions-end">
+        <button class="button ghost" data-action="edit">Edit</button>
+        <button class="button ghost" data-action="delete">Delete</button>
+      </div>
+    </div>
+  `).join("");
+
+  list.querySelectorAll("[data-action='edit']").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = Number(button.closest("[data-id]").dataset.id);
+      const artist = cachedArtists.find((item) => item.id === id);
+      if (!artist) return;
+      document.getElementById("artistId").value = artist.id;
+      document.getElementById("artistName").value = artist.name;
+      document.getElementById("artistBio").value = artist.bio || "";
+      document.getElementById("artistImageUrl").value = artist.imageUrl || "";
+      setMessage(document.getElementById("artistMsg"), `Editing ${artist.name}`);
+    });
+  });
+
+  list.querySelectorAll("[data-action='delete']").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const id = Number(button.closest("[data-id]").dataset.id);
+      if (!confirm("Delete this artist?")) return;
+      const res = await fetch(`/api/admin/artists/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setMessage(document.getElementById("artistMsg"), data.error || "Could not delete artist.", true);
+        return;
+      }
+      await refreshArtists();
+    });
+  });
+}
+
+function renderReports(report) {
+  const stats = document.getElementById("reportStats");
+  const topSongs = document.getElementById("topSongsReport");
+  if (!stats || !topSongs || !report) return;
+  const totals = report.totals || {};
+  const rows = [
+    ["Users", totals.users],
+    ["Premium", totals.premiumUsers],
+    ["Songs", totals.songs],
+    ["Artists", totals.artists],
+    ["Albums", totals.albums],
+    ["Payments", totals.payments],
+    ["Revenue", `Rs ${totals.revenue || 0}`],
+    ["Follows", totals.follows]
+  ];
+  stats.innerHTML = rows.map(([label, value]) => `
+    <div class="stat-card">
+      <div class="stat-label">${label}</div>
+      <div class="stat-value">${value || 0}</div>
+    </div>
+  `).join("");
+
+  topSongs.innerHTML = (report.topSongs || []).map((song) => `
+    <div class="list-item">
+      <span>${escapeHtml(song.title)}</span>
+      <span class="muted">${song.likes} likes</span>
+    </div>
+  `).join("") || `<div class="list-item"><span>No song likes yet.</span></div>`;
+}
+
 let cachedPlaylists = [];
+let cachedArtists = [];
+let cachedAlbums = [];
 
 async function refreshAdminData() {
-  cachedPlaylists = await loadPlaylists();
+  [cachedPlaylists, cachedArtists, cachedAlbums] = await Promise.all([
+    loadPlaylists(),
+    loadArtists(),
+    loadAlbums()
+  ]);
   renderPlaylistAdminList(cachedPlaylists);
   renderPlaylistSelect(document.getElementById("playlistSelect"), cachedPlaylists);
   renderPlaylistSelect(
@@ -306,6 +506,21 @@ async function refreshSongs() {
   renderSongAdminList(songs);
 }
 
+async function refreshUsers() {
+  const users = await loadUsers();
+  renderUserAdminList(users);
+}
+
+async function refreshArtists() {
+  cachedArtists = await loadArtists();
+  renderArtistAdminList(cachedArtists);
+}
+
+async function refreshReports() {
+  const report = await loadReports();
+  renderReports(report);
+}
+
 async function init() {
   document.getElementById("logoutBtn").onclick = logout;
   const statusEl = document.getElementById("adminStatus");
@@ -323,18 +538,22 @@ async function init() {
   const createForm = document.getElementById("createPlaylistForm");
   const songForm = document.getElementById("addSongForm");
   const editForm = document.getElementById("editPlaylistForm");
+  const artistForm = document.getElementById("artistForm");
   wireDropzones(createForm);
   wireDropzones(songForm);
   wireDropzones(editForm);
 
   document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       const tab = btn.dataset.tab;
       document.querySelectorAll(".admin-tab").forEach((section) => {
         section.classList.toggle("hidden", section.dataset.tab !== tab);
       });
+      if (tab === "users") await refreshUsers();
+      if (tab === "artists") await refreshArtists();
+      if (tab === "reports") await refreshReports();
     });
   });
 
@@ -404,6 +623,31 @@ async function init() {
     } catch (err) {
       setMessage(editMsg, err.error || "Failed to update playlist.", true);
     }
+  });
+
+  const artistMsg = document.getElementById("artistMsg");
+  artistForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const artistId = document.getElementById("artistId").value;
+    const payload = Object.fromEntries(new FormData(artistForm).entries());
+    const url = artistId ? `/api/admin/artists/${artistId}` : "/api/admin/artists";
+    const method = artistId ? "PATCH" : "POST";
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setMessage(artistMsg, data.error || "Failed to save artist.", true);
+      return;
+    }
+    setMessage(artistMsg, "Artist saved.");
+    artistForm.reset();
+    document.getElementById("artistId").value = "";
+    await refreshArtists();
+    await refreshAdminData();
   });
 
   document

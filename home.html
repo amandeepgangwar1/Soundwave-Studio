@@ -21,7 +21,10 @@
             </div>
             <div class="nav">
                 <a class="active" href="home.html">Home</a>
+                <a href="search.html">Search</a>
+                <a href="artists.html">Artists</a>
                 <a href="library.html">Library</a>
+                <a href="premium.html">Premium</a>
                 <a href="admin.html">Admin</a>
             </div>
             <div class="page-nav">
@@ -42,11 +45,37 @@
         </div>
         <div class="grid" id="playlistGrid"></div>
 
+        <div class="section-title">For You</div>
+        <div class="grid two-col">
+            <section class="panel">
+                <div class="section-title compact-title">Recently Played</div>
+                <div class="list" id="recentList"></div>
+            </section>
+            <section class="panel">
+                <div class="section-title compact-title">Recommended Songs</div>
+                <div class="list" id="recommendList"></div>
+            </section>
+        </div>
+
+        <div class="section-title">New & Trending</div>
+        <div class="grid two-col">
+            <section class="panel">
+                <div class="section-title compact-title">Trending Songs</div>
+                <div class="list" id="trendingSongs"></div>
+            </section>
+            <section class="panel">
+                <div class="section-title compact-title">New Releases</div>
+                <div class="list" id="newReleases"></div>
+            </section>
+        </div>
+
         <div class="section-title">Quick Actions</div>
         <div class="panel">
-            <div class="list">
-                <div class="list-item"><span>Open a playlist to play songs with animation.</span></div>
-                <div class="list-item"><span>Save playlists or like songs to build your library.</span></div>
+            <div class="actions">
+                <a class="button ghost" href="search.html">Search Music</a>
+                <a class="button ghost" href="artists.html">Follow Artists</a>
+                <a class="button ghost" href="sections/playlist-management.html">Manage Playlists</a>
+                <a class="button ghost" href="premium.html">Premium Plans</a>
             </div>
         </div>
 
@@ -78,6 +107,7 @@
         Made with ❤️ by Amandeep. All rights reserved to Amandeep
     </footer>
 
+    <script src="JavaScript/navigation.js"></script>
     <script src="JavaScript/transition.js"></script>
     <script src="JavaScript/home.js"></script>
 </body>

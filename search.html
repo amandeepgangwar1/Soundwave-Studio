@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search | Soundwave Studio</title>
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="Cascading Style Sheets/app.css">
+</head>
+
+<body>
+    <div class="shell">
+        <div class="topbar">
+            <div class="logo">
+                <img src="img/soundwave.svg" alt="Soundwave">
+                <span>Soundwave Studio</span>
+            </div>
+            <div class="nav">
+                <a href="home.html">Home</a>
+                <a class="active" href="search.html">Search</a>
+                <a href="artists.html">Artists</a>
+                <a href="library.html">Library</a>
+                <a href="premium.html">Premium</a>
+            </div>
+            <button class="button ghost" id="logoutBtn">Logout</button>
+        </div>
+
+        <section class="panel">
+            <div class="section-title">Search Music</div>
+            <div class="panel search-panel flush-panel">
+                <img class="icon-svg search-icon" src="img/search.svg" alt="">
+                <input id="globalSearchInput" type="text" placeholder="Search songs, artists, albums, playlists, podcasts">
+                <button class="button ghost small" id="voiceSearchBtn">Voice</button>
+            </div>
+            <div class="tab-strip" id="searchTabs">
+                <button class="pill-btn active" data-tab="songs">Songs</button>
+                <button class="pill-btn" data-tab="artists">Artists</button>
+                <button class="pill-btn" data-tab="albums">Albums</button>
+                <button class="pill-btn" data-tab="playlists">Playlists</button>
+                <button class="pill-btn" data-tab="podcasts">Podcasts</button>
+            </div>
+        </section>
+
+        <section class="result-section" data-result="songs">
+            <div class="section-title">Songs</div>
+            <div class="panel">
+                <div class="list" id="songResults"></div>
+            </div>
+        </section>
+
+        <section class="result-section hidden" data-result="artists">
+            <div class="section-title">Artists</div>
+            <div class="grid" id="artistResults"></div>
+        </section>
+
+        <section class="result-section hidden" data-result="albums">
+            <div class="section-title">Albums</div>
+            <div class="grid" id="albumResults"></div>
+        </section>
+
+        <section class="result-section hidden" data-result="playlists">
+            <div class="section-title">Playlists</div>
+            <div class="grid" id="playlistResults"></div>
+        </section>
+
+        <section class="result-section hidden" data-result="podcasts">
+            <div class="section-title">Podcasts</div>
+            <div class="grid" id="podcastResults"></div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        Made with love by Amandeep. All rights reserved to Amandeep
+    </footer>
+
+    <script src="JavaScript/navigation.js"></script>
+    <script src="JavaScript/transition.js"></script>
+    <script src="JavaScript/search.js"></script>
+</body>
+
+</html>

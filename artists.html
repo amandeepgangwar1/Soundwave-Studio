@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Playlist | Soundwave Studio</title>
+    <title>Artists | Soundwave Studio</title>
     <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="Cascading Style Sheets/app.css">
 </head>
@@ -19,7 +19,7 @@
             <div class="nav">
                 <a href="home.html">Home</a>
                 <a href="search.html">Search</a>
-                <a href="artists.html">Artists</a>
+                <a class="active" href="artists.html">Artists</a>
                 <a href="library.html">Library</a>
                 <a href="premium.html">Premium</a>
             </div>
@@ -27,26 +27,33 @@
         </div>
 
         <section class="panel">
-            <div class="section-title" id="playlistTitle">Playlist</div>
-            <p class="muted" id="playlistDesc"></p>
+            <div class="section-title">Artists</div>
+            <p class="muted">Follow artists to tune your recommendations and get updates in your library.</p>
         </section>
 
-        <div class="section-title">Songs</div>
-        <div class="panel search-panel">
-            <img class="icon-svg search-icon" src="img/searchbar.svg" alt="">
-            <input id="songSearch" type="text" placeholder="Search songs...">
-        </div>
-        <div class="panel">
-            <div class="list" id="playlistSongs"></div>
+        <div class="split-layout">
+            <section>
+                <div class="panel search-panel">
+                    <img class="icon-svg search-icon" src="img/searchbar.svg" alt="">
+                    <input id="artistSearch" type="text" placeholder="Search artists">
+                </div>
+                <div class="grid" id="artistGrid"></div>
+            </section>
+
+            <aside class="panel detail-panel" id="artistDetail">
+                <div class="section-title">Artist Details</div>
+                <p class="muted">Select an artist to see songs and albums.</p>
+            </aside>
         </div>
     </div>
+
     <footer class="footer">
-        Made with ❤️ by Amandeep. All rights reserved to Amandeep
+        Made with love by Amandeep. All rights reserved to Amandeep
     </footer>
 
     <script src="JavaScript/navigation.js"></script>
     <script src="JavaScript/transition.js"></script>
-    <script src="JavaScript/playlist.js"></script>
+    <script src="JavaScript/artists.js"></script>
 </body>
 
 </html>
