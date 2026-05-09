@@ -143,7 +143,9 @@ Use Render when you want the full Express app running as one web service.
 - Build command: `npm --prefix server install`
 - Start command: `npm --prefix server start`
 - Required environment variable: `MONGO_URI`
-- Optional environment variables: `OPENAI_API_KEY`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
+- Optional environment variables: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
+
+For a fully free deployment, do not set `OPENAI_API_KEY`. The app will use built-in rule-based recommendations.
 
 Steps:
 

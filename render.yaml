@@ -10,9 +10,3 @@ services:
         value: production
       - key: MONGO_URI
         sync: false
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: OPENAI_EMBEDDING_MODEL
-        value: text-embedding-3-small
-      - key: OPENAI_EMBEDDING_DIMENSIONS
-        value: "512"
