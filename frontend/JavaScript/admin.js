@@ -178,6 +178,11 @@ function resetDropzones(form) {
   });
 }
 
+function hasSelectedFile(form, name) {
+  const input = form.querySelector(`input[type="file"][name="${name}"]`);
+  return Boolean(input && input.files && input.files.length > 0);
+}
+
 async function loadPlaylists() {
   const res = await fetch("/api/admin/playlists", { credentials: "include" });
   if (!res.ok) return [];
@@ -683,6 +688,10 @@ async function init() {
   createForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     setMessage(createMsg, "");
+    if (!hasSelectedFile(createForm, "cover")) {
+      setMessage(createMsg, "Choose a cover image before creating the playlist.", true);
+      return;
+    }
     try {
       const formData = new FormData(createForm);
       await uploadWithProgress("/api/admin/playlists", "POST", formData, createProgress);
@@ -700,6 +709,10 @@ async function init() {
   songForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     setMessage(songMsg, "");
+    if (!hasSelectedFile(songForm, "audio")) {
+      setMessage(songMsg, "Choose at least one audio file before uploading songs.", true);
+      return;
+    }
     try {
       const formData = new FormData(songForm);
       const data = await uploadWithProgress("/api/admin/songs", "POST", formData, songProgress);
