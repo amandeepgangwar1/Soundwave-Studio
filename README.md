@@ -95,6 +95,8 @@ npm --prefix server install
 $env:MONGO_URI="mongodb://127.0.0.1:27017/soundwave"
 ```
 
+You can also copy `server/.env.example` to `server/.env` and replace `<db_password>` with your MongoDB Atlas database user password. The real `.env` file is ignored by Git.
+
 3. Optional: enable AI recommendations:
 
 ```bash
@@ -119,6 +121,8 @@ http://localhost:3000
 | Name | Required | Description |
 | --- | --- | --- |
 | `MONGO_URI` | Recommended | MongoDB connection string. Defaults to local `soundwave` database. |
+| `HOST` | Optional | Host interface for the Express server. Defaults to `0.0.0.0` for deployment. |
+| `PUBLIC_URL` | Optional | Public deployed URL shown in server logs. |
 | `OPENAI_API_KEY` | Optional | Enables AI-assisted recommendations with `text-embedding-3-small`. Without it, the app uses the built-in rule-based recommendations. |
 | `OPENAI_EMBEDDING_MODEL` | Optional | Embedding model for recommendation similarity. Defaults to `text-embedding-3-small`. |
 | `OPENAI_EMBEDDING_DIMENSIONS` | Optional | Embedding vector size stored in MongoDB. Defaults to `512`. |
@@ -135,6 +139,16 @@ For real money collection, connect a payment provider account and use the option
 
 This project is configured for Render and Vercel.
 
+### MongoDB Atlas
+
+Use a MongoDB Atlas connection string for every hosted environment:
+
+```text
+mongodb+srv://amandeepgangwar0:REAL_PASSWORD@cluster0.nk3gxak.mongodb.net/soundwave?retryWrites=true&w=majority&appName=Cluster0
+```
+
+In Atlas, create or confirm the database user, replace `REAL_PASSWORD`, and allow network access for your hosts. For free hosted deployments where the outbound IP is not fixed, Atlas commonly needs an IP access list entry of `0.0.0.0/0`; use a strong database password if you allow access from anywhere.
+
 ### Render
 
 Use Render when you want the full Express app running as one web service.
@@ -142,8 +156,9 @@ Use Render when you want the full Express app running as one web service.
 - Blueprint file: `render.yaml`
 - Build command: `npm --prefix server install`
 - Start command: `npm --prefix server start`
+- Health check path: `/api/health`
 - Required environment variable: `MONGO_URI`
-- Optional environment variables: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
+- Optional environment variables: `PUBLIC_URL`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
 
 For a fully free deployment, do not set `OPENAI_API_KEY`. The app will use built-in rule-based recommendations.
 
@@ -151,8 +166,9 @@ Steps:
 
 1. Push this repository to GitHub.
 2. In Render, create a new Blueprint or Web Service from the repo.
-3. Set `MONGO_URI` in Render environment variables.
+3. Set `MONGO_URI` in Render environment variables using the Atlas URI.
 4. Deploy.
+5. Open `https://soundwave-studio.onrender.com/api/health` or your Render service URL's `/api/health` path and confirm it returns `{"ok":true,"db":"connected"}`.
 
 ### Vercel
 
@@ -168,8 +184,9 @@ Steps:
 1. Push this repository to GitHub.
 2. Import the repo in Vercel.
 3. Keep the project root as `.`.
-4. Set the environment variables.
+4. Set `MONGO_URI` for Production, Preview, and Development if needed.
 5. Deploy.
+6. Open your Vercel URL's `/api/health` path and confirm it returns `{"ok":true,"db":"connected"}`.
 
 For production uploads, use durable object storage such as S3, Cloudinary, or another file store. Vercel Functions have a read-only project filesystem and request payload limits, so large admin audio uploads are better handled on Render with a persistent disk or through external storage. Render deployments also need a persistent disk or external storage if uploaded songs must survive redeploys.
 

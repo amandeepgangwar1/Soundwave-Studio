@@ -4,6 +4,9 @@
   "description": "Express + MongoDB backend for Soundwave Studio",
   "main": "index.js",
   "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node index.js",
     "seed": "node seed.js"
