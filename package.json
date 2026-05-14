@@ -2,7 +2,12 @@
   "name": "soundwave-studio",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
+    "postinstall": "npm --prefix backend install",
+    "build": "npm --prefix backend install",
     "dev": "npm --prefix backend start",
     "start": "npm --prefix backend start",
     "seed": "npm --prefix backend run seed"
