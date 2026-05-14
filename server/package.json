@@ -1,7 +1,7 @@
 {
-  "name": "spotify-clone-server",
+  "name": "soundwave-studio",
   "version": "1.0.0",
-  "description": "Express + MongoDB backend for the Spotify clone",
+  "description": "Express + MongoDB backend for Soundwave Studio",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {

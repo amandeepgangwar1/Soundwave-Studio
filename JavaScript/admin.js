@@ -4,6 +4,11 @@ async function requireSignedInUser() {
     window.location.href = "/admin-login.html";
     return false;
   }
+  if (res.status === 403) {
+    // User is logged in but not an admin
+    window.location.href = "/home.html";
+    return false;
+  }
   if (!res.ok) return false;
   return true;
 }
@@ -27,6 +32,36 @@ function escapeHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+const featuredArtistNames = [
+  "A. R. Rahman",
+  "Arijit Singh",
+  "Armaan Malik",
+  "Atif Aslam",
+  "Badshah",
+  "Neha Kakkar",
+  "Shreya Ghoshal",
+  "Sonu Nigam",
+  "Sunidhi Chauhan"
+];
+const artistPreviewLimit = 6;
+let showAllAdminArtists = false;
+
+function sortArtistsForDisplay(items) {
+  const featuredOrder = new Map(featuredArtistNames.map((name, index) => [name.toLowerCase(), index]));
+  return [...items].sort((a, b) => {
+    const aName = String(a.name || "");
+    const bName = String(b.name || "");
+    const aRank = featuredOrder.has(aName.toLowerCase())
+      ? featuredOrder.get(aName.toLowerCase())
+      : Number.MAX_SAFE_INTEGER;
+    const bRank = featuredOrder.has(bName.toLowerCase())
+      ? featuredOrder.get(bName.toLowerCase())
+      : Number.MAX_SAFE_INTEGER;
+    if (aRank !== bRank) return aRank - bRank;
+    return aName.localeCompare(bName);
+  });
 }
 
 function showProgress(progressEl, percent) {
@@ -340,6 +375,57 @@ function renderSongAdminList(songs) {
   });
 }
 
+function setAdminManagerPanel(panelName = "") {
+  const grid = document.getElementById("adminManageGrid");
+  grid?.classList.toggle("manager-expanded", Boolean(panelName));
+
+  const panels = document.querySelectorAll(".admin-expandable-panel");
+  panels.forEach((panel) => {
+    const isExpanded = panel.dataset.managerPanel === panelName;
+    const isMinimized = Boolean(panelName) && !isExpanded;
+    panel.classList.toggle("is-expanded", isExpanded);
+    panel.classList.toggle("is-minimized", isMinimized);
+    panel.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+
+    const toggle = panel.querySelector("[data-expand-manager]");
+    if (toggle) {
+      toggle.textContent = isExpanded ? "Show Compact" : "Open Full";
+    }
+  });
+}
+
+function toggleAdminManagerPanel(panelName) {
+  const expanded = document.querySelector(".admin-expandable-panel.is-expanded");
+  setAdminManagerPanel(expanded?.dataset.managerPanel === panelName ? "" : panelName);
+}
+
+function wireAdminManagerPanels() {
+  document.querySelectorAll(".admin-expandable-panel").forEach((panel) => {
+    const panelName = panel.dataset.managerPanel;
+    const toggle = panel.querySelector("[data-expand-manager]");
+
+    toggle?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleAdminManagerPanel(panelName);
+    });
+
+    panel.addEventListener("click", (event) => {
+      const interactive = event.target.closest(
+        "button, input, select, textarea, label, a, .dropzone"
+      );
+      if (interactive) return;
+      setAdminManagerPanel(panelName);
+    });
+
+    panel.addEventListener("keydown", (event) => {
+      if (event.target !== panel) return;
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      toggleAdminManagerPanel(panelName);
+    });
+  });
+}
+
 function renderUserAdminList(users) {
   const list = document.getElementById("userAdminList");
   if (!list) return;
@@ -401,19 +487,44 @@ function renderArtistAdminList(artists) {
   const list = document.getElementById("artistAdminList");
   if (!list) return;
   if (!artists.length) {
+    list.className = "list";
     list.innerHTML = `<div class="muted">No artists yet.</div>`;
     return;
   }
 
-  list.innerHTML = artists.map((artist) => `
-    <div class="list-item" data-id="${artist.id}">
-      <span>${escapeHtml(artist.name)} <span class="muted">- ${artist.songCount || 0} songs</span></span>
-      <div class="actions-end">
-        <button class="button ghost" data-action="edit">Edit</button>
-        <button class="button ghost" data-action="delete">Delete</button>
+  const orderedArtists = sortArtistsForDisplay(artists);
+  const visibleArtists = showAllAdminArtists
+    ? orderedArtists
+    : orderedArtists.slice(0, artistPreviewLimit);
+
+  list.className = "artist-grid";
+  list.innerHTML = visibleArtists.map((artist) => `
+    <div class="artist-card" data-id="${artist.id}">
+      <img class="artist-card-image" src="${escapeHtml(artist.imageUrl || "img/music.svg")}" alt="${escapeHtml(artist.name)}">
+      <div class="artist-card-body">
+        <div class="artist-card-header">
+          <span>${escapeHtml(artist.name)}</span>
+        </div>
+        <div class="artist-info">
+          <p class="artist-bio">${escapeHtml(artist.bio || "No bio")}</p>
+          <p class="artist-songs">${artist.songCount || 0} songs</p>
+          <div class="artist-card-footer">
+            <button class="button ghost" data-action="edit">Edit</button>
+            <button class="button ghost" data-action="delete">Delete</button>
+          </div>
+        </div>
       </div>
     </div>
-  `).join("");
+  `).join("") + (
+    !showAllAdminArtists && orderedArtists.length > artistPreviewLimit
+      ? `<button class="button ghost artist-see-more" type="button" data-action="see-more-artists">See More...</button>`
+      : ""
+  );
+
+  list.querySelector("[data-action='see-more-artists']")?.addEventListener("click", () => {
+    showAllAdminArtists = true;
+    renderArtistAdminList(cachedArtists);
+  });
 
   list.querySelectorAll("[data-action='edit']").forEach((button) => {
     button.addEventListener("click", () => {
@@ -441,7 +552,7 @@ function renderArtistAdminList(artists) {
         setMessage(document.getElementById("artistMsg"), data.error || "Could not delete artist.", true);
         return;
       }
-      await refreshArtists();
+      await refreshAdminData();
     });
   });
 }
@@ -492,6 +603,7 @@ async function refreshAdminData() {
     document.getElementById("managePlaylistSelect"),
     cachedPlaylists
   );
+  renderArtistAdminList(cachedArtists);
   await refreshSongs();
 }
 
@@ -542,17 +654,24 @@ async function init() {
   wireDropzones(createForm);
   wireDropzones(songForm);
   wireDropzones(editForm);
+  wireAdminManagerPanels();
 
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       const tab = btn.dataset.tab;
+      const expandTarget = btn.dataset.expandTarget || "";
       document.querySelectorAll(".admin-tab").forEach((section) => {
         section.classList.toggle("hidden", section.dataset.tab !== tab);
       });
+      if (tab === "manage") {
+        setAdminManagerPanel(expandTarget);
+      } else {
+        setAdminManagerPanel("");
+      }
       if (tab === "users") await refreshUsers();
-      if (tab === "artists") await refreshArtists();
+      if (expandTarget === "artists") await refreshArtists();
       if (tab === "reports") await refreshReports();
     });
   });

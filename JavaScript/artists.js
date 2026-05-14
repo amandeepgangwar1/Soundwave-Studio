@@ -1,5 +1,18 @@
 let artists = [];
 let selectedArtistId = null;
+let showAllArtists = false;
+const artistPreviewLimit = 6;
+const featuredArtistNames = [
+  "A. R. Rahman",
+  "Arijit Singh",
+  "Armaan Malik",
+  "Atif Aslam",
+  "Badshah",
+  "Neha Kakkar",
+  "Shreya Ghoshal",
+  "Sonu Nigam",
+  "Sunidhi Chauhan"
+];
 
 async function requireAuth() {
   const res = await fetch("/api/me", { credentials: "include" });
@@ -26,10 +39,27 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
+function sortArtistsForDisplay(items) {
+  const featuredOrder = new Map(featuredArtistNames.map((name, index) => [name.toLowerCase(), index]));
+  return [...items].sort((a, b) => {
+    const aName = String(a.name || "");
+    const bName = String(b.name || "");
+    const aRank = featuredOrder.has(aName.toLowerCase())
+      ? featuredOrder.get(aName.toLowerCase())
+      : Number.MAX_SAFE_INTEGER;
+    const bRank = featuredOrder.has(bName.toLowerCase())
+      ? featuredOrder.get(bName.toLowerCase())
+      : Number.MAX_SAFE_INTEGER;
+    if (aRank !== bRank) return aRank - bRank;
+    return aName.localeCompare(bName);
+  });
+}
+
 async function loadArtists() {
   const res = await fetch("/api/artists", { credentials: "include" });
   if (!res.ok) return [];
-  artists = await res.json();
+  const rows = await res.json();
+  artists = sortArtistsForDisplay(rows.filter((artist) => (artist.songCount || 0) > 0));
   return artists;
 }
 
@@ -47,14 +77,20 @@ function renderArtists() {
     return;
   }
 
-  grid.innerHTML = filtered.map((artist) => `
+  const visibleArtists = showAllArtists ? filtered : filtered.slice(0, artistPreviewLimit);
+
+  grid.innerHTML = visibleArtists.map((artist) => `
     <div class="card ${artist.id === selectedArtistId ? "selected-card" : ""}" data-artist-id="${artist.id}">
       <img src="${escapeHtml(artist.imageUrl || "img/music.svg")}" alt="${escapeHtml(artist.name)}">
       <div class="card-title">${escapeHtml(artist.name)}</div>
       <div class="card-desc">${artist.songCount || 0} songs</div>
       <button class="button ghost" data-action="follow">${artist.followed ? "Following" : "Follow"}</button>
     </div>
-  `).join("");
+  `).join("") + (
+    !showAllArtists && filtered.length > artistPreviewLimit
+      ? `<button class="button ghost artist-see-more" type="button" data-action="see-more-artists">See More...</button>`
+      : ""
+  );
 }
 
 async function toggleFollow(artistId) {
@@ -116,6 +152,8 @@ async function init() {
   const params = new URLSearchParams(window.location.search);
   const requestedArtist = Number(params.get("artist"));
   if (Number.isInteger(requestedArtist) && requestedArtist > 0) {
+    const requestedIndex = artists.findIndex((artist) => artist.id === requestedArtist);
+    if (requestedIndex >= artistPreviewLimit) showAllArtists = true;
     await renderArtistDetail(requestedArtist);
   } else if (artists.length) {
     await renderArtistDetail(artists[0].id);
@@ -124,9 +162,20 @@ async function init() {
   }
 
   const input = document.getElementById("artistSearch");
-  if (input) input.addEventListener("input", renderArtists);
+  if (input) {
+    input.addEventListener("input", () => {
+      showAllArtists = false;
+      renderArtists();
+    });
+  }
 
   document.getElementById("artistGrid").addEventListener("click", async (event) => {
+    if (event.target.closest("[data-action='see-more-artists']")) {
+      showAllArtists = true;
+      renderArtists();
+      return;
+    }
+
     const card = event.target.closest("[data-artist-id]");
     if (!card) return;
     const artistId = Number(card.dataset.artistId);

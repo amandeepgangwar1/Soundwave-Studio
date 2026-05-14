@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs/promises");
 const mongoose = require("mongoose");
+const { artistProfiles } = require("./catalog-data");
 
 const MONGO_URI =
   process.env.MONGO_URI || "mongodb://127.0.0.1:27017/soundwave";
@@ -164,12 +165,34 @@ async function getNextId(name) {
   const doc = await Counter.findOneAndUpdate(
     { _id: name },
     { $inc: { seq: 1 } },
-    { new: true, upsert: true }
+    { returnDocument: "after", upsert: true }
   );
   return doc.seq;
 }
 
+async function seedFeaturedArtists() {
+  for (const artist of artistProfiles) {
+    const existing = await Artist.findOne({ name: artist.name });
+    if (existing) {
+      const update = {};
+      if (!existing.bio) update.bio = artist.bio;
+      if (!existing.imageUrl || existing.imageUrl === "/img/music.svg") {
+        update.imageUrl = artist.imageUrl;
+      }
+      if (Object.keys(update).length) {
+        await Artist.updateOne({ artistId: existing.artistId }, update);
+      }
+      continue;
+    }
+
+    const artistId = await getNextId("artist");
+    await Artist.create({ artistId, ...artist });
+  }
+}
+
 async function seedIfEmpty() {
+  await seedFeaturedArtists();
+
   const count = await Playlist.countDocuments();
   if (count > 0) return;
 

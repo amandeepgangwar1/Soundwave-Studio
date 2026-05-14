@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const { connectDb, seedIfEmpty, getNextId, models } = require("./db");
+const { getArtistProfile, getSongMetadataOverride } = require("./catalog-data");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -102,6 +103,9 @@ function escapeRegExp(value) {
 }
 
 function parseSongMeta(filename) {
+  const override = getSongMetadataOverride(filename);
+  if (override) return override;
+
   const clean = path
     .parse(filename)
     .name
@@ -385,14 +389,27 @@ async function syncPlaylistsWithFolders() {
 
 async function getOrCreateArtist(name, bio = "") {
   const cleanName = String(name || "Various Artists").trim() || "Various Artists";
+  const profile = getArtistProfile(cleanName);
   const existing = await Artist.findOne({ name: cleanName }).lean();
-  if (existing) return existing;
+  if (existing) {
+    const update = {};
+    if (profile?.bio && !existing.bio) update.bio = profile.bio;
+    if (profile?.imageUrl && (!existing.imageUrl || existing.imageUrl === "/img/music.svg")) {
+      update.imageUrl = profile.imageUrl;
+    }
+    if (Object.keys(update).length) {
+      await Artist.updateOne({ artistId: existing.artistId }, update);
+      return { ...existing, ...update };
+    }
+    return existing;
+  }
 
   const artistId = await getNextId("artist");
   const created = await Artist.create({
     artistId,
     name: cleanName,
-    bio: bio || `${cleanName} on Soundwave Studio.`
+    bio: bio || profile?.bio || `${cleanName} on Soundwave Studio.`,
+    imageUrl: profile?.imageUrl || "/img/music.svg"
   });
   return created.toObject();
 }

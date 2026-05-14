@@ -42,7 +42,7 @@
             <button class="button ghost tab-btn active" data-tab="create">Create</button>
             <button class="button ghost tab-btn" data-tab="manage">Manage</button>
             <button class="button ghost tab-btn" data-tab="users">Users</button>
-            <button class="button ghost tab-btn" data-tab="artists">Artists</button>
+            <button class="button ghost tab-btn" data-tab="manage" data-expand-target="artists">Artists</button>
             <button class="button ghost tab-btn" data-tab="reports">Reports</button>
         </div>
 
@@ -103,81 +103,100 @@
             </section>
         </div>
 
-        <div class="grid admin-tab hidden" data-tab="manage">
-            <section class="panel">
-                <div class="section-title">Manage Playlists</div>
-                <div class="list" id="playlistAdminList"></div>
-            </section>
+        <div class="admin-tab hidden" data-tab="manage">
+            <div class="grid admin-manage-grid" id="adminManageGrid">
+                <section class="panel admin-manager-panel">
+                    <div class="section-title">Manage Playlists</div>
+                    <div class="list" id="playlistAdminList"></div>
+                </section>
 
-            <section class="panel">
-                <div class="section-title">Edit Playlist</div>
-                <form class="form" id="editPlaylistForm">
-                    <input type="hidden" name="playlistId" id="editPlaylistId">
-                    <label>
-                        Title
-                        <input type="text" name="title" id="editPlaylistTitle" required>
-                    </label>
-                    <label>
-                        Description
-                        <input type="text" name="description" id="editPlaylistDesc" required>
-                    </label>
-                    <label>
-                        Replace Cover (optional)
-                        <input type="file" name="cover" accept="image/*" hidden>
-                        <div class="dropzone" data-input="cover">Drop cover image here or click to choose.</div>
-                    </label>
-                    <button class="button" type="submit">Save Changes</button>
-                    <div class="progress" id="editPlaylistProgress" aria-hidden="true">
-                        <div class="progress-bar" style="width: 0%"></div>
+                <section class="panel admin-manager-panel">
+                    <div class="section-title">Edit Playlist</div>
+                    <form class="form" id="editPlaylistForm">
+                        <input type="hidden" name="playlistId" id="editPlaylistId">
+                        <label>
+                            Title
+                            <input type="text" name="title" id="editPlaylistTitle" required>
+                        </label>
+                        <label>
+                            Description
+                            <input type="text" name="description" id="editPlaylistDesc" required>
+                        </label>
+                        <label>
+                            Replace Cover (optional)
+                            <input type="file" name="cover" accept="image/*" hidden>
+                            <div class="dropzone" data-input="cover">Drop cover image here or click to choose.</div>
+                        </label>
+                        <button class="button" type="submit">Save Changes</button>
+                        <div class="progress" id="editPlaylistProgress" aria-hidden="true">
+                            <div class="progress-bar" style="width: 0%"></div>
+                        </div>
+                        <div class="helper" id="editPlaylistMsg"></div>
+                    </form>
+                </section>
+
+                <section class="panel admin-manager-panel admin-expandable-panel" id="manageSongsPanel" data-manager-panel="songs" tabindex="0" aria-expanded="false">
+                    <div class="admin-panel-heading">
+                        <div>
+                            <div class="section-title">Manage Songs</div>
+                            <p class="muted admin-panel-subtitle">Select a playlist, update song details, and replace files.</p>
+                        </div>
+                        <button class="button ghost panel-toggle" type="button" data-expand-manager="songs">Open Full</button>
                     </div>
-                    <div class="helper" id="editPlaylistMsg"></div>
-                </form>
-            </section>
-        </div>
+                    <div class="admin-panel-body">
+                        <div class="actions">
+                            <label class="select-field">
+                                Playlist
+                                <select id="managePlaylistSelect"></select>
+                            </label>
+                        </div>
+                        <div class="list" id="songAdminList"></div>
+                    </div>
+                </section>
 
-        <section class="panel admin-tab hidden" data-tab="manage">
-            <div class="section-title">Manage Songs</div>
-            <div class="actions">
-                <label class="select-field">
-                    Playlist
-                    <select id="managePlaylistSelect"></select>
-                </label>
+                <section class="panel admin-manager-panel admin-expandable-panel" id="manageArtistsPanel" data-manager-panel="artists" tabindex="0" aria-expanded="false">
+                    <div class="admin-panel-heading">
+                        <div>
+                            <div class="section-title">Manage Artists</div>
+                            <p class="muted admin-panel-subtitle">Create artists and edit or delete existing artist records.</p>
+                        </div>
+                        <button class="button ghost panel-toggle" type="button" data-expand-manager="artists">Open Full</button>
+                    </div>
+                    <div class="admin-panel-body admin-artist-manager">
+                        <div class="artist-editor">
+                            <div class="section-title compact-title">Create Artist</div>
+                            <form class="form" id="artistForm">
+                                <input type="hidden" name="artistId" id="artistId">
+                                <label>
+                                    Name
+                                    <input type="text" name="name" id="artistName" required>
+                                </label>
+                                <label>
+                                    Bio
+                                    <input type="text" name="bio" id="artistBio">
+                                </label>
+                                <label>
+                                    Image URL
+                                    <input type="text" name="imageUrl" id="artistImageUrl" placeholder="/img/music.svg">
+                                </label>
+                                <button class="button" type="submit">Save Artist</button>
+                                <div class="helper" id="artistMsg"></div>
+                            </form>
+                        </div>
+
+                        <div class="artist-listing">
+                            <div class="section-title compact-title">Artist List</div>
+                            <div class="list" id="artistAdminList"></div>
+                        </div>
+                    </div>
+                </section>
             </div>
-            <div class="list" id="songAdminList"></div>
-        </section>
+        </div>
 
         <section class="panel admin-tab hidden" data-tab="users">
             <div class="section-title">Manage Users</div>
             <div class="list" id="userAdminList"></div>
         </section>
-
-        <div class="grid admin-tab hidden" data-tab="artists">
-            <section class="panel">
-                <div class="section-title">Create Artist</div>
-                <form class="form" id="artistForm">
-                    <input type="hidden" name="artistId" id="artistId">
-                    <label>
-                        Name
-                        <input type="text" name="name" id="artistName" required>
-                    </label>
-                    <label>
-                        Bio
-                        <input type="text" name="bio" id="artistBio">
-                    </label>
-                    <label>
-                        Image URL
-                        <input type="text" name="imageUrl" id="artistImageUrl" placeholder="/img/music.svg">
-                    </label>
-                    <button class="button" type="submit">Save Artist</button>
-                    <div class="helper" id="artistMsg"></div>
-                </form>
-            </section>
-
-            <section class="panel">
-                <div class="section-title">Manage Artists</div>
-                <div class="list" id="artistAdminList"></div>
-            </section>
-        </div>
 
         <section class="panel admin-tab hidden" data-tab="reports">
             <div class="section-title">Reports</div>
