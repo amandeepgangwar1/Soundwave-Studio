@@ -12,6 +12,8 @@ const { getArtistProfile, getSongMetadataOverride } = require("./catalog-data");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || "0.0.0.0";
+const PUBLIC_URL = process.env.PUBLIC_URL || "";
 const SESSION_DAYS = 7;
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || "";
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "";
@@ -2459,8 +2461,9 @@ async function prepareApp() {
 async function start() {
   await prepareApp();
 
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  app.listen(PORT, HOST, () => {
+    const localUrl = HOST === "0.0.0.0" ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
+    console.log(`Server running on ${PUBLIC_URL || localUrl}`);
   });
 }
 
