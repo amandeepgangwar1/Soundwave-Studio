@@ -57,7 +57,7 @@ app.use(async (req, res, next) => {
   next();
 });
 
-app.use(express.static(frontendRoot));
+app.use(express.static(frontendRoot, { extensions: ["html"] }));
 
 const {
   User,

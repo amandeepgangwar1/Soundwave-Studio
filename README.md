@@ -174,9 +174,8 @@ Steps:
 
 ### Vercel
 
-Use Vercel when you want static frontend hosting. The checked-in `vercel.json` serves `frontend/` and proxies `/api/*` requests to the Render backend.
+Use Vercel when you want static frontend hosting. The checked-in `vercel.json` rewrites root URLs into `frontend/` and proxies `/api/*` requests to the Render backend.
 
-- Output directory: `frontend`
 - Install command: `npm --prefix backend install`
 - API proxy: `/api/*` to `https://soundwave-studio.onrender.com/api/*`
 
@@ -185,7 +184,7 @@ Steps:
 1. Push this repository to GitHub.
 2. Import the repo in Vercel.
 3. Keep the project root as `.`.
-4. Confirm the Output Directory is `frontend`.
+4. Keep the Output Directory empty/default so the root `vercel.json` rewrites can route files into `frontend/`.
 5. Deploy.
 6. Open your Vercel URL's `/api/health` path and confirm it proxies to Render and returns `{"ok":true,"db":"connected"}`.
 
