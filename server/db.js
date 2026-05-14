@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs/promises");
 const mongoose = require("mongoose");
+require("./env");
 const { artistProfiles } = require("./catalog-data");
 
 const MONGO_URI =
