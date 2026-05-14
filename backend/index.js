@@ -30,7 +30,9 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 100 * 1024 * 1024 }
 });
-const songsRoot = path.join(__dirname, "..", "songs");
+const projectRoot = path.join(__dirname, "..");
+const frontendRoot = path.join(projectRoot, "frontend");
+const songsRoot = path.join(frontendRoot, "songs");
 let openAiClient = null;
 let openAiUnavailableLogged = false;
 
@@ -55,7 +57,7 @@ app.use(async (req, res, next) => {
   next();
 });
 
-app.use(express.static(path.join(__dirname, "..")));
+app.use(express.static(frontendRoot));
 
 const {
   User,
@@ -273,7 +275,7 @@ async function resolveSongCover(folder, filename) {
   const base = path.parse(filename).name;
   const extensions = [".jpg", ".jpeg", ".png", ".webp"];
   for (const ext of extensions) {
-    const filePath = path.join(__dirname, "..", "songs", folder, `${base}${ext}`);
+    const filePath = path.join(songsRoot, folder, `${base}${ext}`);
     try {
       await fs.access(filePath);
       return `/songs/${folder}/${base}${ext}`;
@@ -2044,7 +2046,7 @@ async function prepareApp() {
         return;
       }
 
-      const folderPath = path.join(__dirname, "..", "songs", safeFolder);
+      const folderPath = path.join(songsRoot, safeFolder);
       await fs.mkdir(folderPath, { recursive: true });
 
       const coverExt = path.extname(req.file.originalname).toLowerCase() || ".jpg";
@@ -2196,7 +2198,7 @@ async function prepareApp() {
         return;
       }
 
-      const folderPath = path.join(__dirname, "..", "songs", playlist.folder);
+      const folderPath = path.join(songsRoot, playlist.folder);
       await fs.mkdir(folderPath, { recursive: true });
 
       const coverFiles = req.files?.cover || [];

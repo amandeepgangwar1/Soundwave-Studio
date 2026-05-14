@@ -6,7 +6,7 @@ const { artistProfiles } = require("./catalog-data");
 
 const MONGO_URI =
   process.env.MONGO_URI || "mongodb://127.0.0.1:27017/soundwave";
-const songsRoot = path.join(__dirname, "..", "songs");
+const songsRoot = path.join(__dirname, "..", "frontend", "songs");
 
 const counterSchema = new mongoose.Schema({
   _id: { type: String, required: true },

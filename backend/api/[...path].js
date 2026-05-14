@@ -1,4 +1,4 @@
-const { app, prepareApp } = require("../server/index");
+const { app, prepareApp } = require("../index");
 
 let readyPromise;
 

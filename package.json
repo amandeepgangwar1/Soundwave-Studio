@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix server start",
-    "start": "npm --prefix server start",
-    "seed": "npm --prefix server run seed"
+    "dev": "npm --prefix backend start",
+    "start": "npm --prefix backend start",
+    "seed": "npm --prefix backend run seed"
   }
 }

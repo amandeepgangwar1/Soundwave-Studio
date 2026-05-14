@@ -1,10 +1,12 @@
 {
-  "installCommand": "npm --prefix server install",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm --prefix backend install",
   "buildCommand": "echo \"No build step required\"",
-  "functions": {
-    "api/[...path].js": {
-      "includeFiles": "songs/**/info.json",
-      "maxDuration": 30
+  "outputDirectory": "frontend",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://soundwave-studio.onrender.com/api/:path*"
     }
-  }
+  ]
 }

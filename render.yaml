@@ -3,8 +3,8 @@ services:
     runtime: node
     name: soundwave-studio
     plan: free
-    buildCommand: npm --prefix server install
-    startCommand: npm --prefix server start
+    buildCommand: npm --prefix backend install
+    startCommand: npm --prefix backend start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV

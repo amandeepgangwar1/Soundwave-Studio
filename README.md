@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="img/soundwave.svg" alt="Soundwave Studio" width="84">
+  <img src="frontend/img/soundwave.svg" alt="Soundwave Studio" width="84">
 </p>
 
 <h1 align="center">Soundwave Studio</h1>
@@ -39,8 +39,8 @@ Soundwave Studio lets users browse curated music playlists, play tracks, save pl
 - Management panel for playlist and song uploads
 - Admin user, artist, song metadata, album, and reporting views
 - MongoDB persistence through Mongoose models
-- Render web service deployment and Vercel serverless API deployment
-- Local song folder seeding from `songs/*/info.json`
+- Render web service deployment and Vercel static frontend deployment
+- Local song folder seeding from `frontend/songs/*/info.json`
 
 ## Tech Stack
 
@@ -52,7 +52,7 @@ Soundwave Studio lets users browse curated music playlists, play tracks, save pl
 | AI recommendations | OpenAI `text-embedding-3-small` embeddings |
 | Auth | bcryptjs, cookie-parser |
 | Uploads | Multer |
-| Deployment | Render, Vercel Functions |
+| Deployment | Render, Vercel |
 
 ## Implemented SRS Coverage
 
@@ -66,17 +66,19 @@ Soundwave Studio lets users browse curated music playlists, play tracks, save pl
 
 ```text
 .
-|-- Cascading Style Sheets/     # App styling
-|-- JavaScript/                 # Frontend scripts
-|-- img/                        # Icons and brand assets
-|-- sections/                   # Extra app pages
-|-- songs/                      # Playlist folders and audio assets
-|-- api/[...path].js            # Vercel API function entry
-|-- server/
+|-- frontend/
+|   |-- Cascading Style Sheets/ # App styling
+|   |-- JavaScript/             # Frontend scripts
+|   |-- img/                    # Icons and brand assets
+|   |-- sections/               # Extra app pages
+|   |-- songs/                  # Playlist folders and audio assets
+|   `-- index.html              # App entry page
+|-- backend/
+|   |-- api/[...path].js        # Optional Vercel API function entry
 |   |-- db.js                   # MongoDB models and seed helpers
 |   `-- index.js                # Express API and static server
 |-- render.yaml                 # Render web service blueprint
-|-- vercel.json                 # Vercel install/function config
+|-- vercel.json                 # Vercel frontend/proxy config
 `-- package.json                # Root dev script
 ```
 
@@ -85,7 +87,7 @@ Soundwave Studio lets users browse curated music playlists, play tracks, save pl
 1. Install backend dependencies:
 
 ```bash
-npm --prefix server install
+npm --prefix backend install
 ```
 
 2. Set MongoDB connection string:
@@ -95,7 +97,7 @@ npm --prefix server install
 $env:MONGO_URI="mongodb://127.0.0.1:27017/soundwave"
 ```
 
-You can also copy `server/.env.example` to `server/.env` and replace `<db_password>` with your MongoDB Atlas database user password. The real `.env` file is ignored by Git.
+You can also copy `backend/.env.example` to `backend/.env` and replace `<db_password>` with your MongoDB Atlas database user password. The real `.env` file is ignored by Git.
 
 3. Optional: enable AI recommendations:
 
@@ -154,8 +156,8 @@ In Atlas, create or confirm the database user, replace `REAL_PASSWORD`, and allo
 Use Render when you want the full Express app running as one web service.
 
 - Blueprint file: `render.yaml`
-- Build command: `npm --prefix server install`
-- Start command: `npm --prefix server start`
+- Build command: `npm --prefix backend install`
+- Start command: `npm --prefix backend start`
 - Health check path: `/api/health`
 - Required environment variable: `MONGO_URI`
 - Optional environment variables: `PUBLIC_URL`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
@@ -172,21 +174,20 @@ Steps:
 
 ### Vercel
 
-Use Vercel when you want static frontend hosting with the Express API running through Vercel Functions.
+Use Vercel when you want static frontend hosting. The checked-in `vercel.json` serves `frontend/` and proxies `/api/*` requests to the Render backend.
 
-- Vercel API entry: `api/[...path].js`
-- Install command: `npm --prefix server install`
-- Required environment variable: `MONGO_URI`
-- Optional environment variables: `OPENAI_API_KEY`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
+- Output directory: `frontend`
+- Install command: `npm --prefix backend install`
+- API proxy: `/api/*` to `https://soundwave-studio.onrender.com/api/*`
 
 Steps:
 
 1. Push this repository to GitHub.
 2. Import the repo in Vercel.
 3. Keep the project root as `.`.
-4. Set `MONGO_URI` for Production, Preview, and Development if needed.
+4. Confirm the Output Directory is `frontend`.
 5. Deploy.
-6. Open your Vercel URL's `/api/health` path and confirm it returns `{"ok":true,"db":"connected"}`.
+6. Open your Vercel URL's `/api/health` path and confirm it proxies to Render and returns `{"ok":true,"db":"connected"}`.
 
 For production uploads, use durable object storage such as S3, Cloudinary, or another file store. Vercel Functions have a read-only project filesystem and request payload limits, so large admin audio uploads are better handled on Render with a persistent disk or through external storage. Render deployments also need a persistent disk or external storage if uploaded songs must survive redeploys.
 
