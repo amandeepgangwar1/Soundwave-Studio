@@ -5,11 +5,23 @@ services:
     plan: free
     buildCommand: npm --prefix backend install
     startCommand: npm --prefix backend start
-    healthCheckPath: /api/health
+    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
       - key: NODE_VERSION
         value: "20"
+      - key: PORT
+        value: "10000"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: PUBLIC_URL
+        value: https://soundwave-studio.onrender.com
       - key: MONGO_URI
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
         sync: false

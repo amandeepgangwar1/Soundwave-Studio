@@ -4,6 +4,7 @@ const fs = require("fs/promises");
 const crypto = require("crypto");
 const https = require("https");
 const express = require("express");
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
@@ -36,6 +37,19 @@ const songsRoot = path.join(frontendRoot, "songs");
 let openAiClient = null;
 let openAiUnavailableLogged = false;
 
+// CORS configuration
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    process.env.FRONTEND_URL || ""
+  ].filter(Boolean),
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
