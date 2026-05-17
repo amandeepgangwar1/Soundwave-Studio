@@ -16,15 +16,20 @@
 body {
     background-color: black;
     color: white;
+    overflow-x: hidden;
 }
 
 .left {
-    width: 28vw;
+    width: 100%;
+    max-width: 300px;
     padding: 10px;
+    flex-shrink: 0;
 }
 
 .right {
-    width: 72vw;
+    width: 100%;
+    flex: 1;
+    min-width: 0;
 }
 
 .home ul li {
@@ -184,12 +189,16 @@ body {
     align-items: center;
     position: fixed;
     bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
     filter: invert(1);
     background: #e2d9d9;
     border-radius: 10px;
-    width: 66.5%;
+    max-width: calc(100% - 40px);
+    width: auto;
     padding: 12px;
     min-height: 40px;
+    max-width: 800px;
 }
 
 .songbuttons {
@@ -237,7 +246,9 @@ body {
 
 .songList .info {
     font-size: 13px;
-    width: 344px;
+    max-width: 344px;
+    min-width: 0;
+    overflow-wrap: break-word;
 }
 
 .info div {
@@ -289,13 +300,16 @@ body {
 }
 
 .songinfo{
-    color: black;
-    padding: 0 7px;
-    width: 250px;
+    max-width: 250px;
+    min-width: 0;
+    overflow-wrap: break-word;
 }
 
 .songtime {
     color: black;
+    padding: 0 7px;
+    max-width: 125px;
+    min-width: 0;
     padding: 0 7px;
     width: 125px;
 }

@@ -1897,6 +1897,93 @@ body.theme-light .search-panel {
     width: 22px;
     height: 22px;
   }
+}
+
+/* Enhanced overflow prevention and professional styling */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.shell {
+  width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.shell * {
+  box-sizing: border-box;
+}
+
+/* Ensure all containers respect viewport bounds */
+.panel,
+.card,
+.dashboard,
+.grid,
+.hero,
+.split-layout {
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Prevent text overflow in all contexts */
+.topbar,
+.nav,
+.nav a,
+.logo,
+.section-title,
+.list-item,
+.button,
+.pill-btn {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive container wrapping */
+.actions,
+.control-row,
+.tab-strip {
+  flex-wrap: wrap;
+}
+
+/* Smooth responsive typography */
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 24px;
+  }
+  
+  .section-title {
+    font-size: 16px;
+  }
+  
+  .button,
+  .pill-btn,
+  .nav-btn {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+}
+
+/* Additional tablet optimization */
+@media (max-width: 768px) {
+  .shell {
+    padding: 20px 12px 64px;
+  }
+  
+  .topbar {
+    gap: 8px;
+  }
+  
+  .logo img {
+    width: 38px;
+    height: 38px;
+  }
+}
+  }
 
   .seek-row,
   .volume-row {
