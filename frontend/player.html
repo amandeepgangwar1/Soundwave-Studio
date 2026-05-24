@@ -8,6 +8,7 @@
     <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="Cascading Style Sheets/app.css">
     <script src="JavaScript/admin-access-control.js" defer></script>
+    <script src="JavaScript/sw-register.js" defer></script>
 </head>
 
 <body>
@@ -68,17 +69,24 @@
             </aside>
 
             <main class="content">
-                <section class="panel player-stage">
+                <section class="panel player-stage premium-player is-loading">
                     <div class="player-visual">
+                        <div class="vinyl-disc" aria-hidden="true">
+                            <div class="vinyl-label"></div>
+                        </div>
                         <div class="pulse-ring"></div>
                         <div class="pulse-ring ring-two"></div>
                         <div class="pulse-ring ring-three"></div>
                         <img class="album-art" id="albumArt" src="img/soundwave.svg" alt="Album art">
                     </div>
-                    <div>
-                        <div class="section-title" id="trackTitle">Loading...</div>
-                        <p class="muted" id="trackMeta"></p>
-                        <div class="player-controls">
+                    <div class="player-main">
+                        <div class="track-heading">
+                            <div>
+                                <div class="section-title" id="trackTitle">Loading...</div>
+                                <p class="muted" id="trackMeta"></p>
+                            </div>
+                        </div>
+                        <div class="player-controls transport-controls">
                             <button class="icon-btn" id="prevBtn" aria-label="Previous">
                                 <img class="icon-svg" src="img/prevsong.svg" alt="">
                             </button>
@@ -89,26 +97,60 @@
                                 <img class="icon-svg" src="img/nextsong.svg" alt="">
                             </button>
                         </div>
-                        <div class="control-row">
-                            <button class="pill-btn" id="shuffleBtn">Shuffle: Off</button>
-                            <button class="pill-btn" id="repeatBtn">Repeat: All</button>
-                            <button class="pill-btn" id="stopBtn">Stop</button>
-                            <button class="pill-btn" id="likeBtn">Favorite</button>
-                            <button class="pill-btn" id="shareBtn">Share</button>
-                            <a class="pill-btn" id="downloadBtn" href="#" download>Download</a>
+                        <div class="control-row action-grid">
+                            <button class="pill-btn action-pill action-shuffle" id="shuffleBtn">Shuffle: Off</button>
+                            <button class="pill-btn action-pill action-repeat" id="repeatBtn">Repeat: All</button>
+                            <button class="pill-btn action-pill action-stop" id="stopBtn">Stop</button>
+                            <button class="pill-btn action-pill action-favorite" id="likeBtn">Favorite</button>
+                            <button class="pill-btn action-pill action-share" id="shareBtn">Share</button>
+                            <a class="pill-btn action-pill action-download" id="downloadBtn" href="#" download>Download</a>
                         </div>
-                        <div class="seek-row">
+                    </div>
+                    <div class="player-left-lower">
+                        <div class="player-waveform" aria-hidden="true">
+                            <span style="--bar: 18%"></span>
+                            <span style="--bar: 34%"></span>
+                            <span style="--bar: 46%"></span>
+                            <span style="--bar: 27%"></span>
+                            <span style="--bar: 62%"></span>
+                            <span style="--bar: 79%"></span>
+                            <span style="--bar: 51%"></span>
+                            <span style="--bar: 37%"></span>
+                            <span style="--bar: 68%"></span>
+                            <span style="--bar: 42%"></span>
+                            <span style="--bar: 24%"></span>
+                            <span style="--bar: 58%"></span>
+                            <span style="--bar: 86%"></span>
+                            <span style="--bar: 49%"></span>
+                            <span style="--bar: 72%"></span>
+                            <span style="--bar: 31%"></span>
+                            <span style="--bar: 53%"></span>
+                            <span style="--bar: 69%"></span>
+                            <span style="--bar: 38%"></span>
+                            <span style="--bar: 57%"></span>
+                            <span style="--bar: 81%"></span>
+                            <span style="--bar: 43%"></span>
+                            <span style="--bar: 28%"></span>
+                            <span style="--bar: 61%"></span>
+                        </div>
+                        <div class="seek-row premium-slider-row">
                             <img class="icon-svg seek-icon" src="img/seekbar.svg" alt="">
                             <input id="seekRange" type="range" min="0" max="100" value="0">
                         </div>
-                        <div class="volume-row">
+                        <div class="mobile-time-row" aria-hidden="true">
+                            <span id="currentTimeText">00:00</span>
+                            <span id="durationTimeText">00:00</span>
+                        </div>
+                        <div class="muted seek-time" id="trackTime">00:00</div>
+                    </div>
+                    <div class="player-side-lower">
+                        <div class="volume-row premium-slider-row">
                             <button class="icon-btn" id="muteBtn" aria-label="Mute">
                                 <img class="icon-svg" id="volumeIcon" src="img/volume.svg" alt="">
                             </button>
                             <input id="volumeRange" type="range" min="0" max="100" value="80">
                         </div>
-                        <div class="meta-row">
-                            <div class="muted" id="trackTime">00:00</div>
+                        <div class="meta-row playback-stats">
                             <div class="muted" id="trackQuality">Quality: 320kbps</div>
                             <div class="muted" id="playCounter">Plays: 0</div>
                         </div>
@@ -116,10 +158,14 @@
                 </section>
 
                 <section class="panel" id="analytics">
-                    <div class="section-title">Analytics & Admin</div>
+                    <div class="section-title">Player Stats</div>
                     <div class="stat-grid">
                         <div class="stat-card">
-                            <div class="stat-label">Total Plays</div>
+                            <div class="stat-label">Quality</div>
+                            <div class="stat-value" id="statQuality">320kbps</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Plays</div>
                             <div class="stat-value" id="statPlays">0</div>
                         </div>
                         <div class="stat-card">
@@ -134,6 +180,12 @@
                             <div class="stat-label">Top Category</div>
                             <div class="stat-value" id="statCategory">Trending</div>
                         </div>
+                    </div>
+                    <div class="theater-shell">
+                        <button class="pill-btn theater-button" id="immersiveTheaterBtn" type="button" aria-label="Immersive Theater">
+                            <span class="theater-emoji" aria-hidden="true">&#127917;</span>
+                            <span class="theater-label">Immersive Theater</span>
+                        </button>
                     </div>
                     <div class="actions">
                         <a class="button" href="admin.html">Open Admin Panel</a>
@@ -177,9 +229,21 @@
         Made with love by Amandeep. All rights reserved to Amandeep
     </footer>
 
+    <div class="mobile-mini-player" id="mobileMiniPlayer" aria-hidden="true">
+        <img id="miniPlayerArt" src="img/soundwave.svg" alt="">
+        <div class="mini-player-copy">
+            <div id="miniPlayerTitle">Now Playing</div>
+            <div id="miniPlayerMeta">SoundWave Studio</div>
+        </div>
+        <button class="icon-btn" id="miniPlayBtn" type="button" aria-label="Play or Pause">
+            <img class="icon-svg" id="miniPlayIcon" src="img/play.svg" alt="">
+        </button>
+    </div>
+
     <script src="JavaScript/navigation.js"></script>
     <script src="JavaScript/transition.js"></script>
     <script src="JavaScript/player.js"></script>
+    <script src="JavaScript/player-integration.js"></script>
 </body>
 
 </html>

@@ -34,6 +34,18 @@
     return page.startsWith("sections/") ? page.replace("sections/", "") : `../${page}`;
   }
 
+  function loadThemeSystem() {
+    if (window.SoundwaveThemeSystem || document.querySelector('script[data-soundwave-theme="true"]')) {
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = hrefFor("JavaScript/color-theme-controller.js");
+    script.defer = true;
+    script.dataset.soundwaveTheme = "true";
+    document.head.appendChild(script);
+  }
+
   function createControl(label, target, disabled) {
     if (disabled) {
       const span = document.createElement("span");
@@ -76,5 +88,6 @@
     topbar.insertBefore(controls, topbar.firstChild);
   }
 
+  loadThemeSystem();
   init();
 })();

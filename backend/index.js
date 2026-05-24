@@ -406,6 +406,45 @@ async function syncPlaylistsWithFolders() {
   }
 }
 
+function songAssetUrl(folder, filename) {
+  if (!folder || !filename) return "";
+  return `/songs/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`;
+}
+
+async function resolveSongFileUrl(preferredFolder, filename) {
+  const safeFilename = path.basename(String(filename || ""));
+  if (!safeFilename) return "";
+
+  async function existsInFolder(folder) {
+    if (!folder) return false;
+    try {
+      const target = ensureInsideSongsRoot(path.join(songsRoot, folder, safeFilename));
+      const stats = await fs.stat(target);
+      return stats.isFile();
+    } catch (err) {
+      return false;
+    }
+  }
+
+  if (await existsInFolder(preferredFolder)) {
+    return songAssetUrl(preferredFolder, safeFilename);
+  }
+
+  try {
+    const entries = await fs.readdir(songsRoot, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.name === preferredFolder) continue;
+      if (await existsInFolder(entry.name)) {
+        return songAssetUrl(entry.name, safeFilename);
+      }
+    }
+  } catch (err) {
+    return "";
+  }
+
+  return "";
+}
+
 async function getOrCreateArtist(name, bio = "") {
   const cleanName = String(name || "Various Artists").trim() || "Various Artists";
   const profile = getArtistProfile(cleanName);
@@ -457,6 +496,7 @@ async function ensureCatalogMetadata() {
     const playlist = playlistMap.get(song.playlistId);
     if (!playlist) continue;
 
+    const fileUrl = await resolveSongFileUrl(playlist.folder, song.filename);
     const meta = parseSongMeta(song.filename);
     const artist = await getOrCreateArtist(meta.artist);
     const albumTitle = meta.album === "Single" ? playlist.title : meta.album;
@@ -471,7 +511,8 @@ async function ensureCatalogMetadata() {
     if (!song.artistId) update.artistId = artist.artistId;
     if (!song.albumId) update.albumId = album.albumId;
     if (!song.genre) update.genre = "Music";
-    if (!song.fileUrl) update.fileUrl = `/songs/${playlist.folder}/${song.filename}`;
+    if (fileUrl && song.fileUrl !== fileUrl) update.fileUrl = fileUrl;
+    if (!fileUrl && !song.fileUrl) update.fileUrl = songAssetUrl(playlist.folder, song.filename);
 
     if (Object.keys(update).length) {
       await Song.updateOne({ songId: song.songId }, update);

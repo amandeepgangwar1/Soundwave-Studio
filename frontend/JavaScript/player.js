@@ -114,14 +114,25 @@ async function init() {
   if (index === -1) index = 0;
 
   const audio = new Audio();
+  audio.id = "soundwaveAudio";
+  audio.preload = "metadata";
+  audio.hidden = true;
+  document.body.appendChild(audio);
+
+  const playerCard = document.querySelector(".premium-player");
   const title = document.getElementById("trackTitle");
   const meta = document.getElementById("trackMeta");
   const time = document.getElementById("trackTime");
+  const currentTimeText = document.getElementById("currentTimeText");
+  const durationTimeText = document.getElementById("durationTimeText");
   const playIcon = document.getElementById("playIcon");
   const album = document.getElementById("albumArt");
   const volumeIcon = document.getElementById("volumeIcon");
   const volumeRange = document.getElementById("volumeRange");
   const seekRange = document.getElementById("seekRange");
+  const trackQuality = document.getElementById("trackQuality");
+  const waveform = document.querySelector(".player-waveform");
+  const waveformBars = waveform ? Array.from(waveform.querySelectorAll("span")) : [];
   const nextTrackEl = document.getElementById("nextTrack");
   const upNextTrackEl = document.getElementById("upNextTrack");
   const queueList = document.getElementById("queueList");
@@ -147,15 +158,23 @@ async function init() {
   const statPlays = document.getElementById("statPlays");
   const statLikes = document.getElementById("statLikes");
   const statCategory = document.getElementById("statCategory");
+  const statQuality = document.getElementById("statQuality");
   const bassRange = document.getElementById("bassRange");
   const trebleRange = document.getElementById("trebleRange");
   const locationText = document.getElementById("locationText");
   const localTrending = document.getElementById("localTrending");
   const offlineToggle = document.getElementById("offlineToggle");
   const liveBtn = document.getElementById("liveBtn");
+  const miniPlayer = document.getElementById("mobileMiniPlayer");
+  const miniPlayerArt = document.getElementById("miniPlayerArt");
+  const miniPlayerTitle = document.getElementById("miniPlayerTitle");
+  const miniPlayerMeta = document.getElementById("miniPlayerMeta");
+  const miniPlayBtn = document.getElementById("miniPlayBtn");
+  const miniPlayIcon = document.getElementById("miniPlayIcon");
 
   const defaultCover = "img/music.svg";
   album.src = defaultCover;
+  if (miniPlayerArt) miniPlayerArt.src = defaultCover;
 
   const likes = getJSON("sw_likes", {});
   const playCounts = getJSON("sw_play_counts", {});
@@ -179,8 +198,44 @@ async function init() {
   let playStack = [];
 
   let audioContext = null;
+  let audioSource = null;
+  let analyserNode = null;
+  let waveformFrequencyData = null;
+  let waveformAnimationFrame = 0;
+  let waveformLevels = waveformBars.map((bar, idx) => {
+    const rawValue = bar.style.getPropertyValue("--bar");
+    const parsed = Number.parseFloat(rawValue);
+    return Number.isFinite(parsed) ? parsed : 14 + (idx % 5) * 5;
+  });
   let bassFilter = null;
   let trebleFilter = null;
+
+  const playerState = {
+    get audio() {
+      return audio;
+    },
+    get audioContext() {
+      return audioContext;
+    },
+    get analyser() {
+      return analyserNode;
+    },
+    get playlist() {
+      return playlist;
+    },
+    get songs() {
+      return songs;
+    },
+    get index() {
+      return index;
+    },
+    get currentSong() {
+      return songs[index] || null;
+    }
+  };
+
+  window.soundwavePlayer = playerState;
+  window.dispatchEvent(new CustomEvent("soundwave:player-ready", { detail: playerState }));
 
   function on(el, eventName, handler) {
     if (!el) return;
@@ -193,26 +248,130 @@ async function init() {
   }
 
   function setupAudioGraph() {
-    if (!window.AudioContext) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext || audioContext) return;
+
     audioContext = new AudioContext();
-    const source = audioContext.createMediaElementSource(audio);
+    try {
+      audioSource = audioContext.createMediaElementSource(audio);
+    } catch (err) {
+      console.warn("Audio graph is already connected:", err.message);
+      return;
+    }
+
     bassFilter = audioContext.createBiquadFilter();
     bassFilter.type = "lowshelf";
     bassFilter.frequency.value = 200;
     trebleFilter = audioContext.createBiquadFilter();
     trebleFilter.type = "highshelf";
     trebleFilter.frequency.value = 3000;
-    source.connect(bassFilter);
+    analyserNode = audioContext.createAnalyser();
+    analyserNode.fftSize = 512;
+    analyserNode.smoothingTimeConstant = 0.72;
+    waveformFrequencyData = new Uint8Array(analyserNode.frequencyBinCount);
+
+    audioSource.connect(bassFilter);
     bassFilter.connect(trebleFilter);
-    trebleFilter.connect(audioContext.destination);
+    trebleFilter.connect(analyserNode);
+    analyserNode.connect(audioContext.destination);
+
+    window.dispatchEvent(new CustomEvent("soundwave:audio-graph-ready", { detail: playerState }));
   }
 
-  function ensureAudioContext() {
-    if (!audioContext && window.AudioContext) {
+  function getAverageFrequency(startBin, endBin) {
+    if (!waveformFrequencyData || startBin >= endBin) return 0;
+    let total = 0;
+    let count = 0;
+    for (let i = startBin; i < endBin; i += 1) {
+      total += waveformFrequencyData[i] || 0;
+      count += 1;
+    }
+    return count ? total / count / 255 : 0;
+  }
+
+  function setWaveformBar(index, height, energy) {
+    const bar = waveformBars[index];
+    if (!bar) return;
+    const level = Math.max(0, Math.min(1, energy));
+    const boundedHeight = Math.max(7, Math.min(100, height));
+    bar.style.setProperty("--bar", `${boundedHeight.toFixed(1)}%`);
+    bar.style.setProperty("--bar-alpha", (0.48 + level * 0.48).toFixed(2));
+    bar.style.setProperty("--bar-glow", `${Math.round(7 + level * 18)}px`);
+  }
+
+  function resetWaveformBars() {
+    waveformBars.forEach((bar, idx) => {
+      const base = 10 + ((idx * 7) % 18);
+      waveformLevels[idx] = base;
+      setWaveformBar(idx, base, 0.16);
+    });
+  }
+
+  function stopWaveformVisualizer(resetBars = false) {
+    if (waveformAnimationFrame) {
+      cancelAnimationFrame(waveformAnimationFrame);
+      waveformAnimationFrame = 0;
+    }
+    if (resetBars && waveform) {
+      waveform.classList.remove("is-audio-reactive");
+    }
+    if (resetBars) resetWaveformBars();
+  }
+
+  function drawWaveform() {
+    waveformAnimationFrame = 0;
+    if (!waveformBars.length || !analyserNode || !waveformFrequencyData || audio.paused || audio.ended) {
+      stopWaveformVisualizer(audio.paused || audio.ended);
+      return;
+    }
+
+    analyserNode.getByteFrequencyData(waveformFrequencyData);
+    const binCount = waveformFrequencyData.length;
+    const bassEnergy = getAverageFrequency(1, Math.min(16, binCount));
+    const midEnergy = getAverageFrequency(16, Math.min(72, binCount));
+    const maxVisualBin = Math.max(12, Math.floor(binCount * 0.72));
+
+    waveformBars.forEach((bar, idx) => {
+      const normalized = waveformBars.length > 1 ? idx / (waveformBars.length - 1) : 0;
+      const curved = Math.pow(normalized, 1.55);
+      const startBin = Math.min(maxVisualBin - 2, Math.floor(curved * maxVisualBin));
+      const width = Math.max(3, Math.floor(maxVisualBin / waveformBars.length * (1.55 + normalized)));
+      const endBin = Math.min(maxVisualBin, startBin + width);
+      const frequencyEnergy = getAverageFrequency(startBin, endBin);
+      const beatLift = Math.max(0, bassEnergy - 0.28) * (1 - normalized * 0.38) * 30;
+      const midLift = Math.max(0, midEnergy - 0.22) * (0.35 + normalized * 0.5) * 15;
+      const target = 8 + Math.pow(frequencyEnergy, 1.08) * 76 + beatLift + midLift;
+      const previous = waveformLevels[idx] || 8;
+      const attack = target > previous ? 0.52 : 0.2;
+      const nextLevel = previous + (target - previous) * attack;
+      waveformLevels[idx] = nextLevel;
+      setWaveformBar(idx, nextLevel, Math.max(frequencyEnergy, bassEnergy * 0.7));
+    });
+
+    waveformAnimationFrame = requestAnimationFrame(drawWaveform);
+  }
+
+  async function startWaveformVisualizer() {
+    if (!waveformBars.length || !waveform) return;
+    if (!analyserNode || audioContext?.state === "suspended") {
+      await ensureAudioContext();
+    }
+    if (!analyserNode) return;
+    waveform.classList.add("is-audio-reactive");
+    if (!waveformFrequencyData) {
+      waveformFrequencyData = new Uint8Array(analyserNode.frequencyBinCount);
+    }
+    if (!waveformAnimationFrame) {
+      waveformAnimationFrame = requestAnimationFrame(drawWaveform);
+    }
+  }
+
+  async function ensureAudioContext() {
+    if (!audioContext && (window.AudioContext || window.webkitAudioContext)) {
       setupAudioGraph();
     }
     if (audioContext && audioContext.state === "suspended") {
-      audioContext.resume();
+      await audioContext.resume();
     }
   }
 
@@ -259,6 +418,8 @@ async function init() {
     };
     title.textContent = metaInfo.title;
     meta.textContent = `${metaInfo.artist} - ${metaInfo.album}`;
+    if (miniPlayerTitle) miniPlayerTitle.textContent = metaInfo.title;
+    if (miniPlayerMeta) miniPlayerMeta.textContent = metaInfo.artist;
   }
 
   function pushHistory(song) {
@@ -420,7 +581,74 @@ async function init() {
     return (currentIndex + 1) % songs.length;
   }
 
-  function loadSong() {
+  function getSongSource(song) {
+    if (song.fileUrl) return song.fileUrl;
+    if (!playlist?.folder || !song.filename) return "";
+    return `/songs/${encodeURIComponent(playlist.folder)}/${encodeURIComponent(song.filename)}`;
+  }
+
+  function setPlaybackStatus(value) {
+    if (trackQuality) {
+      trackQuality.textContent = value;
+    }
+    if (statQuality && value.startsWith("Quality:")) {
+      statQuality.textContent = value.replace("Quality:", "").trim();
+    }
+  }
+
+  function setPlaybackIcon(src) {
+    if (playIcon) playIcon.src = src;
+    if (miniPlayIcon) miniPlayIcon.src = src;
+  }
+
+  function updateTimeDisplays(current = audio.currentTime, duration = audio.duration) {
+    const currentLabel = formatTime(current);
+    const durationLabel = formatTime(duration);
+    if (time) time.textContent = `${currentLabel} / ${durationLabel}`;
+    if (currentTimeText) currentTimeText.textContent = currentLabel;
+    if (durationTimeText) durationTimeText.textContent = durationLabel;
+  }
+
+  function updateRangeFill(range, value = range?.value) {
+    if (!range) return;
+    const min = Number(range.min || 0);
+    const max = Number(range.max || 100);
+    const current = Number(value || 0);
+    const percent = max > min ? ((current - min) / (max - min)) * 100 : 0;
+    range.style.setProperty("--range-value", `${Math.max(0, Math.min(100, percent))}%`);
+  }
+
+  function getPlaybackErrorMessage(error) {
+    if (error?.name === "NotAllowedError") {
+      return "Press play to start";
+    }
+    return "Track unavailable";
+  }
+
+  async function startPlayback(options = {}) {
+    try {
+      await ensureAudioContext();
+
+      await audio.play();
+      setPlaybackIcon("img/pause.svg");
+      setPlaybackStatus("Quality: 320kbps");
+      try {
+        await startWaveformVisualizer();
+      } catch (err) {
+        console.debug("Waveform visualizer could not start:", err.message);
+      }
+      return true;
+    } catch (err) {
+      console.warn("Could not play song:", err);
+      audio.pause();
+      setPlaybackIcon("img/play.svg");
+      setPlaybackStatus(getPlaybackErrorMessage(err));
+      stopWaveformVisualizer(true);
+      return false;
+    }
+  }
+
+  function loadSong(options = {}) {
     if (!songs.length) {
       title.textContent = "Select a playlist to start playing";
       meta.textContent = "";
@@ -428,12 +656,30 @@ async function init() {
     }
 
     const current = songs[index];
-    const folder = encodeURIComponent(playlist.folder);
-    const fileName = encodeURIComponent(current.filename);
-    audio.src = `/songs/${folder}/${fileName}`;
+    audio.src = getSongSource(current);
+    const startAt = Number(options.startTime || 0);
+    if (startAt > 0) {
+      audio.addEventListener(
+        "loadedmetadata",
+        () => {
+          try {
+            audio.currentTime = Math.min(startAt, audio.duration || startAt);
+          } catch (err) {
+            console.debug("Could not restore player playback position:", err.message);
+          }
+        },
+        { once: true }
+      );
+    }
+
     setTrackMeta(current);
     album.src = current.coverUrl || defaultCover;
+    if (miniPlayerArt) miniPlayerArt.src = album.src;
+    playerCard?.classList.remove("is-loading");
     seekRange.value = 0;
+    updateRangeFill(seekRange, 0);
+    updateTimeDisplays(0, audio.duration);
+    resetWaveformBars();
     updateUpNext();
     updateLikeState(current);
 
@@ -459,19 +705,20 @@ async function init() {
         downloadBtn.textContent = "Premium Download";
       }
     }
-    ensureAudioContext();
-    audio.play().catch(() => {});
-    playIcon.src = "img/pause.svg";
+    if (options.autoPlay !== false) {
+      startPlayback({ allowAudioGraph: options.allowAudioGraph !== false });
+    } else {
+      setPlaybackIcon("img/play.svg");
+    }
   }
 
   function playPause() {
     if (audio.paused) {
-      ensureAudioContext();
-      audio.play().catch(() => {});
-      playIcon.src = "img/pause.svg";
+      startPlayback();
     } else {
       audio.pause();
-      playIcon.src = "img/play.svg";
+      setPlaybackIcon("img/play.svg");
+      stopWaveformVisualizer(true);
     }
   }
 
@@ -495,7 +742,13 @@ async function init() {
   function stopSong() {
     audio.pause();
     audio.currentTime = 0;
-    playIcon.src = "img/play.svg";
+    if (seekRange) {
+      seekRange.value = 0;
+      updateRangeFill(seekRange, 0);
+    }
+    updateTimeDisplays(0, audio.duration);
+    setPlaybackIcon("img/play.svg");
+    stopWaveformVisualizer(true);
   }
 
   function syncVolumeIcon() {
@@ -757,15 +1010,49 @@ async function init() {
     });
   }
 
+  function updateMiniPlayerVisibility() {
+    if (!miniPlayer || !playerCard) return;
+    const isMobile = window.matchMedia("(max-width: 720px)").matches;
+    const triggerPoint = playerCard.offsetTop + playerCard.offsetHeight * 0.75;
+    const shouldShow = isMobile && window.scrollY > triggerPoint;
+    miniPlayer.classList.toggle("is-visible", shouldShow);
+    miniPlayer.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+  }
+
+  function setupMiniPlayer() {
+    if (!miniPlayer) return;
+    on(miniPlayBtn, "click", playPause);
+    window.addEventListener("scroll", updateMiniPlayerVisibility, { passive: true });
+    window.addEventListener("resize", updateMiniPlayerVisibility);
+    updateMiniPlayerVisibility();
+  }
+
+  function consumeTheaterReturn() {
+    try {
+      const raw = sessionStorage.getItem("sw_theater_return");
+      if (!raw) return null;
+      sessionStorage.removeItem("sw_theater_return");
+      return JSON.parse(raw);
+    } catch (err) {
+      return null;
+    }
+  }
+
 
   audio.addEventListener("timeupdate", () => {
-    time.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    updateTimeDisplays(audio.currentTime, audio.duration);
     if (!isNaN(audio.duration) && audio.duration > 0) {
       seekRange.value = Math.floor((audio.currentTime / audio.duration) * 100);
+      updateRangeFill(seekRange);
     }
   });
 
+  audio.addEventListener("loadedmetadata", () => {
+    updateTimeDisplays(audio.currentTime, audio.duration);
+  });
+
   audio.addEventListener("ended", () => {
+    stopWaveformVisualizer(true);
     if (repeatMode === "one") {
       loadSong();
       return;
@@ -775,6 +1062,24 @@ async function init() {
       return;
     }
     nextSong();
+  });
+
+  audio.addEventListener("error", () => {
+    setPlaybackIcon("img/play.svg");
+    setPlaybackStatus("Track unavailable");
+    stopWaveformVisualizer(true);
+  });
+
+  audio.addEventListener("playing", () => {
+    startWaveformVisualizer().catch((err) => {
+      console.debug("Waveform visualizer could not start:", err.message);
+    });
+  });
+
+  audio.addEventListener("pause", () => {
+    if (!audio.ended) {
+      stopWaveformVisualizer(true);
+    }
   });
 
   on(document.getElementById("playBtn"), "click", playPause);
@@ -790,6 +1095,7 @@ async function init() {
   on(volumeRange, "input", () => {
     audio.volume = Number(volumeRange.value) / 100;
     audio.muted = false;
+    updateRangeFill(volumeRange);
     syncVolumeIcon();
   });
 
@@ -801,10 +1107,13 @@ async function init() {
   audio.volume = 0.8;
   if (volumeRange) {
     volumeRange.value = 80;
+    updateRangeFill(volumeRange);
   }
   syncVolumeIcon();
+  resetWaveformBars();
 
   on(seekRange, "input", () => {
+    updateRangeFill(seekRange);
     if (!isNaN(audio.duration) && audio.duration > 0) {
       audio.currentTime = (Number(seekRange.value) / 100) * audio.duration;
     }
@@ -847,9 +1156,33 @@ async function init() {
   setupLocation();
   setupOfflineToggle();
   setupLiveStream();
+  setupMiniPlayer();
+
+  const theaterReturn = consumeTheaterReturn();
+  if (theaterReturn && songs.length) {
+    const returnedIndex = Number(theaterReturn.currentIndex);
+    if (Number.isInteger(returnedIndex)) {
+      index = Math.max(0, Math.min(returnedIndex, songs.length - 1));
+    }
+
+    const returnedVolume = Number(theaterReturn.volume);
+    if (Number.isFinite(returnedVolume)) {
+      audio.volume = Math.max(0, Math.min(1, returnedVolume));
+      if (volumeRange) {
+        volumeRange.value = Math.round(audio.volume * 100);
+        updateRangeFill(volumeRange);
+      }
+    }
+    audio.muted = Boolean(theaterReturn.muted);
+    syncVolumeIcon();
+  }
 
   if (songs.length) {
-    loadSong();
+    loadSong({
+      startTime: Number(theaterReturn?.currentTime || 0),
+      autoPlay: theaterReturn ? Boolean(theaterReturn.autoPlay) : true,
+      allowAudioGraph: Boolean(theaterReturn),
+    });
   } else {
     title.textContent = "Select a playlist to start playing";
     meta.textContent = "No songs loaded.";

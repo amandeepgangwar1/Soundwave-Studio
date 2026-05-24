@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immersive Theater | Soundwave Studio</title>
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="Cascading Style Sheets/app.css">
+    <link rel="stylesheet" href="Cascading Style Sheets/immersive-theater.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body class="immersive-mode">
+    <div id="immersive-theater">
+        <!-- Main visualization area -->
+        <div id="theater-backdrop"></div>
+        
+        <!-- D3 Waveform Visualizer -->
+        <div id="waveform-d3-viz" class="waveform-container"></div>
+        
+        <!-- Radial Spectrum -->
+        <svg id="radial-spectrum" class="radial-visualizer"></svg>
+        
+        <!-- Particle System -->
+        <canvas id="particle-canvas" class="particle-layer"></canvas>
+
+        <!-- Close Button -->
+        <button id="exit-theater" class="exit-btn" title="Exit immersive mode">
+            <span class="exit-icon">&times;</span>
+        </button>
+        
+        <!-- Centered Artwork -->
+        <div class="artwork-disc">
+            <img id="theater-album-art" src="img/soundwave.svg" alt="Album Art" class="spinning-disc">
+            <div class="disc-glow"></div>
+        </div>
+        
+        <!-- Lyrics Display -->
+        <div class="lyrics-display">
+            <div class="lyrics-container">
+                <div id="lyrics-content" class="lyrics-text">
+                    <p class="lyric-line">Select a song to begin</p>
+                </div>
+                <button id="close-lyrics" class="close-btn" title="Close lyrics">✕</button>
+            </div>
+        </div>
+        
+        <!-- Controller HUD -->
+        <div class="controller-hud">
+            <div class="hud-controls">
+                <!-- Progress -->
+                <div class="hud-progress">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <div class="progress-time">
+                        <span id="current-time">0:00</span>
+                        <span id="duration-time">0:00</span>
+                    </div>
+                </div>
+                
+                <!-- Playback Controls -->
+                <div class="playback-buttons">
+                    <button id="theater-prev" class="hud-btn" title="Previous track">
+                        <span class="btn-icon">⏮</span>
+                    </button>
+                    <button id="theater-play" class="hud-btn main-btn" title="Play/Pause">
+                        <span class="btn-icon">▶</span>
+                    </button>
+                    <button id="theater-next" class="hud-btn" title="Next track">
+                        <span class="btn-icon">⏭</span>
+                    </button>
+                </div>
+                
+                <!-- Secondary Controls -->
+                <div class="secondary-controls">
+                    <button id="theater-shuffle" class="hud-btn small" title="Shuffle">
+                        <span class="btn-icon">🔀</span>
+                    </button>
+                    <button id="theater-repeat" class="hud-btn small" title="Repeat">
+                        <span class="btn-icon">🔁</span>
+                    </button>
+                    <button id="theater-mute" class="hud-btn small" title="Mute">
+                        <span class="btn-icon">🔊</span>
+                    </button>
+                    <input id="theater-volume" type="range" min="0" max="100" value="80" class="volume-slider" title="Volume">
+                </div>
+                
+                <!-- Close Button -->
+                <button id="exit-theater-hud-legacy" class="exit-btn hud-exit-legacy" title="Exit immersive mode" aria-hidden="true" tabindex="-1">
+                    <span class="exit-icon">✕</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Theme Control -->
+        <div id="theme-control-container" class="theme-control-panel"></div>
+        
+        <!-- Track Info Overlay -->
+        <div class="track-info-overlay">
+            <div class="track-info">
+                <h2 id="theater-track-title">Now Playing</h2>
+                <p id="theater-track-artist">Artist</p>
+                <p id="theater-track-album" class="muted">Album</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="JavaScript/waveform-visualizer.js"></script>
+    <script src="JavaScript/color-theme-controller.js"></script>
+    <script src="JavaScript/immersive-theater.js"></script>
+</body>
+</html>

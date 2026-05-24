@@ -195,19 +195,25 @@ async function init() {
 
   const themeToggle = document.getElementById("themeToggle");
   const themeHint = document.getElementById("themeHint");
-  const storedTheme = localStorage.getItem("sw_theme") || "dark";
-  if (storedTheme === "light") {
-    document.body.classList.add("theme-light");
-    if (themeToggle) themeToggle.textContent = "Switch to Dark";
-    if (themeHint) themeHint.textContent = "Light mode enabled";
-  }
+  const updateThemeCopy = (mode) => {
+    if (themeToggle) themeToggle.textContent = mode === "light" ? "Switch to Dark" : "Switch to Light";
+    if (themeHint) themeHint.textContent = mode === "light" ? "Light mode enabled" : "Dark mode enabled";
+  };
+  updateThemeCopy(localStorage.getItem("sw_theme") || document.body.dataset.themeMode || "dark");
+  window.addEventListener("soundwave:theme-change", (event) => {
+    updateThemeCopy(event.detail?.theme?.mode || "dark");
+  });
   if (themeToggle) {
     themeToggle.addEventListener("click", () => {
-      document.body.classList.toggle("theme-light");
-      const isLight = document.body.classList.contains("theme-light");
-      localStorage.setItem("sw_theme", isLight ? "light" : "dark");
-      themeToggle.textContent = isLight ? "Switch to Dark" : "Switch to Light";
-      if (themeHint) themeHint.textContent = isLight ? "Light mode enabled" : "Dark mode enabled";
+      const currentMode = document.body.dataset.themeMode || localStorage.getItem("sw_theme") || "dark";
+      const nextMode = currentMode === "light" ? "dark" : "light";
+      localStorage.setItem("sw_theme", nextMode);
+      if (window.SoundwaveThemeSystem?.setMode) {
+        window.SoundwaveThemeSystem.setMode(nextMode);
+      } else {
+        document.body.classList.toggle("theme-light", nextMode === "light");
+        updateThemeCopy(nextMode);
+      }
     });
   }
 
