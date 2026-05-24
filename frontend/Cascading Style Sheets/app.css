@@ -4485,8 +4485,13 @@ body[data-theme-mode="light"] .artist-card {
 
   #analytics .stat-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 9px;
+  }
+
+  #analytics .stat-card:nth-child(1),
+  #analytics .stat-card:nth-child(2) {
+    display: none !important;
   }
 
   #analytics .stat-card {
@@ -4545,9 +4550,9 @@ body[data-theme-mode="light"] .artist-card {
 
   #analytics .actions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 9px;
-    margin-top: 0;
+    margin-top: 12px;
   }
 
   #analytics .actions .button {
@@ -4555,6 +4560,19 @@ body[data-theme-mode="light"] .artist-card {
     padding: 9px 10px;
     font-size: 12px;
     white-space: normal;
+    border-radius: 14px;
+  }
+
+  #analytics .actions .button:first-child {
+    background: linear-gradient(135deg, #3ddc84, #55b7ff);
+    color: #0b0f14;
+    font-weight: 700;
+    grid-column: span 2;
+  }
+
+  #analytics .actions .button.ghost {
+    border: 1px solid rgba(61, 220, 132, 0.3);
+    grid-column: auto;
   }
 
   .live-panel,
