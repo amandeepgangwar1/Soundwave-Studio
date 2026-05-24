@@ -4479,15 +4479,16 @@ body[data-theme-mode="light"] .artist-card {
   }
 
   .premium-player #immersiveTheaterBtn.theater-button {
-    grid-column: span 3 !important;
-    width: 100%;
+    grid-column: 1 / -1;
+    width: calc(100% + 16px);
+    margin-left: -8px;
     min-height: 48px;
     border-radius: 15px;
     justify-content: center;
     gap: 10px;
     padding: 10px 12px;
     font-size: 0 !important;
-    margin: 8px 0 0 0;
+    margin-top: 8px;
     background: linear-gradient(135deg, rgba(61, 220, 132, 0.15), rgba(85, 183, 255, 0.08));
     border: 1px solid rgba(61, 220, 132, 0.25);
   }
