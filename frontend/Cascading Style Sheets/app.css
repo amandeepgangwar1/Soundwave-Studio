@@ -4454,17 +4454,62 @@ body[data-theme-mode="light"] .artist-card {
   .premium-player .action-grid {
     order: 6;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 9px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px;
     width: 100%;
     margin: 0;
   }
 
   .premium-player .action-pill {
-    min-height: 44px;
-    padding: 9px 10px;
-    border-radius: 13px;
-    font-size: 12px;
+    min-height: 40px;
+    padding: 7px 6px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .premium-player #immersiveTheaterBtn.theater-button {
+    order: 7;
+    width: 100%;
+    min-height: 48px;
+    border-radius: 15px;
+    grid-column: span 3 !important;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 12px;
+    font-size: 0 !important;
+    margin: 6px 0 0 0;
+    background: linear-gradient(135deg, rgba(61, 220, 132, 0.15), rgba(85, 183, 255, 0.08));
+    border: 1px solid rgba(61, 220, 132, 0.25);
+  }
+
+  .premium-player #immersiveTheaterBtn.theater-button::before,
+  .premium-player #immersiveTheaterBtn.theater-button::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .premium-player .theater-emoji {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #63e19a, #2fc878);
+    font-size: 15px;
+    box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.3);
+  }
+
+  .premium-player .theater-label {
+    color: #66f0a0;
+    font-size: 14px;
+    font-weight: 800;
   }
 
   .premium-player #seekRange,
@@ -4510,47 +4555,12 @@ body[data-theme-mode="light"] .artist-card {
   }
 
   #analytics .theater-shell {
-    width: 100%;
-    margin: 0;
-  }
-
-  #analytics .theater-button,
-  #analytics #immersiveTheaterBtn.theater-button {
-    width: 100%;
-    min-height: 56px;
-    border-radius: 16px !important;
-    justify-content: center;
-    gap: 12px;
-    padding: 12px 14px;
-    font-size: 0 !important;
-  }
-
-  #analytics .theater-button::before,
-  #analytics .theater-button::after {
-    content: none !important;
     display: none !important;
-  }
-
-  #analytics .theater-emoji {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #63e19a, #2fc878);
-    font-size: 17px;
-    box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.3);
-  }
-
-  #analytics .theater-label {
-    color: #66f0a0;
-    font-size: 17px;
-    font-weight: 800;
   }
 
   #analytics .actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 9px;
     margin-top: 12px;
   }
@@ -4563,31 +4573,28 @@ body[data-theme-mode="light"] .artist-card {
     border-radius: 14px;
   }
 
-  #analytics .actions .button:first-child {
-    background: linear-gradient(135deg, #3ddc84, #55b7ff);
-    color: #0b0f14;
-    font-weight: 700;
-    grid-column: span 2;
+  .live-panel {
+    display: none !important;
+    max-height: none;
   }
 
-  #analytics .actions .button.ghost {
-    border: 1px solid rgba(61, 220, 132, 0.3);
-    grid-column: auto;
-  }
-
-  .live-panel,
   .rightbar > .panel {
     padding: 16px;
     border-radius: 18px;
+    min-height: 260px;
   }
 
-  .live-panel {
-    max-height: none;
+  .rightbar > .panel:nth-of-type(1) {
+    order: 4;
+  }
+
+  .rightbar > .panel:nth-of-type(2) {
+    order: 5;
   }
 
   .live-panel .list,
   #queueList {
-    max-height: 148px;
+    max-height: 280px;
     overflow-y: auto;
     padding-right: 2px;
     scrollbar-width: thin;
