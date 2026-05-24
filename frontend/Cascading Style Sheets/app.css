@@ -4474,17 +4474,20 @@ body[data-theme-mode="light"] .artist-card {
     justify-content: center;
   }
 
+  .premium-player .action-pill:nth-child(n+4) {
+    grid-column: auto;
+  }
+
   .premium-player #immersiveTheaterBtn.theater-button {
-    order: 7;
+    grid-column: span 3 !important;
     width: 100%;
     min-height: 48px;
     border-radius: 15px;
-    grid-column: span 3 !important;
     justify-content: center;
     gap: 10px;
     padding: 10px 12px;
     font-size: 0 !important;
-    margin: 6px 0 0 0;
+    margin: 8px 0 0 0;
     background: linear-gradient(135deg, rgba(61, 220, 132, 0.15), rgba(85, 183, 255, 0.08));
     border: 1px solid rgba(61, 220, 132, 0.25);
   }
