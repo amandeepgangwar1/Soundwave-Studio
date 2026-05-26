@@ -9,53 +9,99 @@
     <link rel="stylesheet" href="Cascading Style Sheets/app.css">
 </head>
 
-<body>
-    <div class="shell">
-        <div class="topbar">
-            <div class="logo">
+<body class="landing-page">
+    <div class="shell landing-shell">
+        <header class="topbar landing-topbar">
+            <div class="logo landing-logo">
                 <img src="img/soundwave.svg" alt="Soundwave">
                 <span>Soundwave Studio</span>
             </div>
-            <div class="nav">
+            <nav class="nav landing-nav" aria-label="Primary">
                 <a href="browse.html">Browse</a>
                 <a href="login.html">Login</a>
-                <a href="signup.html">Sign up</a>
-            </div>
-        </div>
+                <a class="landing-signup" href="signup.html">Sign up</a>
+            </nav>
+        </header>
 
-        <section class="hero">
-            <div>
-                <h1>Music for focus, energy, and flow.</h1>
-                <p>Build your library, save playlists, and like tracks across your favorite moods.</p>
-                <div class="action-groups">
-                    <div class="action-group">
-                        <div class="action-title">User</div>
-                        <div class="actions">
-                            <a class="button" href="signup.html">Create account</a>
-                            <a class="button ghost" href="login.html">I already have one</a>
-                            <a class="button ghost" href="browse.html">Browse as guest</a>
+        <main class="landing-hero">
+            <section class="landing-copy">
+                <p class="landing-eyebrow">Soundtrack your life</p>
+                <h1>Music for focus,<br>energy, and <span>flow.</span></h1>
+                <p class="landing-intro">Build your library, save playlists, and like tracks<br class="desktop-only"> across your favorite moods.</p>
+                <div class="landing-action-groups">
+                    <div class="landing-action-group">
+                        <p class="landing-action-title">User</p>
+                        <div class="landing-actions">
+                            <a class="landing-button primary icon-user" href="signup.html">Create account</a>
+                            <a class="landing-button" href="login.html">I already have one</a>
+                            <a class="landing-button" href="browse.html">Browse as guest</a>
                         </div>
                     </div>
-                    <div class="action-group">
-                        <div class="action-title">Manage</div>
-                        <div class="actions">
-                            <a class="button" href="admin-signup.html">Create account</a>
-                            <a class="button ghost" href="admin-login.html">Sign in</a>
+                    <div class="landing-action-group">
+                        <p class="landing-action-title">Manage</p>
+                        <div class="landing-actions">
+                            <a class="landing-button primary icon-settings" href="admin-signup.html">Create account</a>
+                            <a class="landing-button icon-login" href="admin-login.html">Sign in</a>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="panel">
-                <div class="section-title">What you get</div>
-                <div class="list">
-                    <div class="list-item"><span>Full playlists synced to your account</span></div>
-                    <div class="list-item"><span>Like songs and keep them forever</span></div>
-                    <div class="list-item"><span>Clean, professional listening interface</span></div>
+                <div class="landing-highlights">
+                    <article class="landing-highlight">
+                        <span class="highlight-icon icon-note" aria-hidden="true"></span>
+                        <div>
+                            <strong>Curated for every mood</strong>
+                            <span>Handpicked playlists<br>that fit your vibe.</span>
+                        </div>
+                    </article>
+                    <article class="landing-highlight">
+                        <span class="highlight-icon icon-heart" aria-hidden="true"></span>
+                        <div>
+                            <strong>Save &amp; like with ease</strong>
+                            <span>Your favorites, always<br>within reach.</span>
+                        </div>
+                    </article>
+                    <article class="landing-highlight">
+                        <span class="highlight-icon icon-shield" aria-hidden="true"></span>
+                        <div>
+                            <strong>Clean &amp; professional</strong>
+                            <span>A listening experience<br>that stays out of the way.</span>
+                        </div>
+                    </article>
                 </div>
-            </div>
-        </section>
-        <footer class="footer">
-            Made with love by Amanoteq. All rights reserved to Amanoteq
+            </section>
+
+            <aside class="landing-benefits">
+                <div class="landing-benefits-head">
+                    <h2>What you get</h2>
+                    <span class="landing-signal" aria-hidden="true"></span>
+                </div>
+                <div class="landing-benefit-list">
+                    <article class="landing-benefit">
+                        <span class="benefit-icon icon-sync" aria-hidden="true"></span>
+                        <div>
+                            <strong>Full playlists synced to your account</strong>
+                            <p>Access your music across all your devices.</p>
+                        </div>
+                    </article>
+                    <article class="landing-benefit">
+                        <span class="benefit-icon icon-heart" aria-hidden="true"></span>
+                        <div>
+                            <strong>Like songs and keep them forever</strong>
+                            <p>Build a collection that's uniquely yours.</p>
+                        </div>
+                    </article>
+                    <article class="landing-benefit">
+                        <span class="benefit-icon icon-headphones" aria-hidden="true"></span>
+                        <div>
+                            <strong>Clean, professional listening interface</strong>
+                            <p>Focus on the music, not the clutter.</p>
+                        </div>
+                    </article>
+                </div>
+            </aside>
+        </main>
+        <footer class="footer landing-footer">
+            Made with <span aria-label="love">&#10084;&#65039;</span> by Amandeep. All rights reserved to Amandeep
         </footer>
     </div>
     <script src="JavaScript/navigation.js"></script>

@@ -196,6 +196,9 @@ async function init() {
   let isShuffle = false;
   let repeatMode = "all";
   let playStack = [];
+  const unavailableTrackIndices = new Set();
+  let continuePlaybackAfterError = false;
+  let recordedPlaybackSource = "";
 
   let audioContext = null;
   let audioSource = null;
@@ -408,6 +411,22 @@ async function init() {
     statLikes.textContent = totalLikes;
   }
 
+  function recordPlaybackStart(song) {
+    if (!song) return;
+    const source = audio.currentSrc || audio.src;
+    if (recordedPlaybackSource === source) return;
+    recordedPlaybackSource = source;
+
+    const key = getSongKey(song);
+    playCounts[key] = Number(playCounts[key] || 0) + 1;
+    setJSON("sw_play_counts", playCounts);
+    if (playCounter) playCounter.textContent = `Plays: ${playCounts[key]}`;
+
+    pushHistory(song);
+    renderHistory();
+    updateStats();
+  }
+
   function setTrackMeta(song) {
     if (!song) return;
     const fallback = parseSongMeta(song.filename);
@@ -575,10 +594,16 @@ async function init() {
   function getNextIndex(currentIndex, allowRepeatOne) {
     if (repeatMode === "one" && allowRepeatOne) return currentIndex;
     if (isShuffle) {
-      const available = songs.map((_, idx) => idx).filter((idx) => idx !== currentIndex);
+      const available = songs
+        .map((_, idx) => idx)
+        .filter((idx) => idx !== currentIndex && !unavailableTrackIndices.has(idx));
       return available[Math.floor(Math.random() * available.length)] ?? currentIndex;
     }
-    return (currentIndex + 1) % songs.length;
+    for (let offset = 1; offset <= songs.length; offset += 1) {
+      const candidate = (currentIndex + offset) % songs.length;
+      if (!unavailableTrackIndices.has(candidate)) return candidate;
+    }
+    return currentIndex;
   }
 
   function getSongSource(song) {
@@ -656,7 +681,14 @@ async function init() {
     }
 
     const current = songs[index];
-    audio.src = getSongSource(current);
+    const source = getSongSource(current);
+    continuePlaybackAfterError = options.autoPlay !== false;
+    recordedPlaybackSource = "";
+    if (!source) {
+      handleUnavailableTrack();
+      return;
+    }
+    audio.src = source;
     const startAt = Number(options.startTime || 0);
     if (startAt > 0) {
       audio.addEventListener(
@@ -683,12 +715,6 @@ async function init() {
     updateUpNext();
     updateLikeState(current);
 
-    const key = getSongKey(current);
-    playCounts[key] = Number(playCounts[key] || 0) + 1;
-    setJSON("sw_play_counts", playCounts);
-    playCounter.textContent = `Plays: ${playCounts[key]}`;
-
-    pushHistory(current);
     renderHistory();
     updateStats();
     renderRecommendations();
@@ -709,7 +735,30 @@ async function init() {
       startPlayback({ allowAudioGraph: options.allowAudioGraph !== false });
     } else {
       setPlaybackIcon("img/play.svg");
+      setPlaybackStatus("Ready to play");
     }
+  }
+
+  function handleUnavailableTrack() {
+    if (!songs.length) return;
+    unavailableTrackIndices.add(index);
+    setPlaybackIcon("img/play.svg");
+    stopWaveformVisualizer(true);
+
+    if (unavailableTrackIndices.size >= songs.length) {
+      setPlaybackStatus("No playable tracks available");
+      return;
+    }
+
+    const nextIndex = getNextIndex(index, false);
+    if (nextIndex === index) {
+      setPlaybackStatus("Track unavailable");
+      return;
+    }
+
+    setPlaybackStatus("Skipping unavailable track");
+    index = nextIndex;
+    loadSong({ autoPlay: continuePlaybackAfterError });
   }
 
   function playPause() {
@@ -1065,12 +1114,13 @@ async function init() {
   });
 
   audio.addEventListener("error", () => {
-    setPlaybackIcon("img/play.svg");
-    setPlaybackStatus("Track unavailable");
-    stopWaveformVisualizer(true);
+    handleUnavailableTrack();
   });
 
   audio.addEventListener("playing", () => {
+    unavailableTrackIndices.delete(index);
+    continuePlaybackAfterError = false;
+    recordPlaybackStart(songs[index]);
     startWaveformVisualizer().catch((err) => {
       console.debug("Waveform visualizer could not start:", err.message);
     });

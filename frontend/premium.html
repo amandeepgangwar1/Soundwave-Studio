@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="Cascading Style Sheets/app.css">
 </head>
 
-<body>
+<body class="studio-page dashboard-page page-premium">
     <div class="shell">
         <div class="topbar">
             <div class="logo">
@@ -26,24 +26,16 @@
             <button class="button ghost" id="logoutBtn">Logout</button>
         </div>
 
-        <section class="panel">
-            <div class="section-title">Premium</div>
-            <div class="stat-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Current Plan</div>
-                    <div class="stat-value" id="currentPlan">Loading</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Premium Features</div>
-                    <div class="stat-value">4</div>
-                </div>
-            </div>
+        <section class="panel page-heading premium-heading">
+            <div class="section-title">Choose Your Plan</div>
+            <p class="muted">Unlock premium features and elevate your music experience.</p>
+            <span class="current-plan" id="currentPlan" aria-live="polite">Loading</span>
         </section>
 
         <div class="grid plan-grid">
             <section class="panel plan-card active-plan" data-plan="monthly">
                 <div class="section-title">Monthly</div>
-                <div class="price">Rs 119</div>
+                <div class="price">&#8377;119 <small>/month</small></div>
                 <div class="mini-list">
                     <div>No ads</div>
                     <div>Offline listening</div>
@@ -55,7 +47,8 @@
 
             <section class="panel plan-card" data-plan="yearly">
                 <div class="section-title">Yearly</div>
-                <div class="price">Rs 1188</div>
+                <span class="popular-plan">Popular</span>
+                <div class="price">&#8377;1188 <small>/year</small></div>
                 <div class="mini-list">
                     <div>All monthly features</div>
                     <div>Lower effective monthly price</div>
@@ -67,7 +60,7 @@
 
             <section class="panel plan-card" data-plan="student">
                 <div class="section-title">Student</div>
-                <div class="price">Rs 59</div>
+                <div class="price">&#8377;59 <small>/month</small></div>
                 <div class="mini-list">
                     <div>Ad-free streaming</div>
                     <div>Offline listening</div>
@@ -78,17 +71,10 @@
             </section>
         </div>
 
-        <section class="panel payment-panel">
-            <div class="section-title">Payment</div>
+        <section class="panel payment-panel compact-payment">
+            <div class="section-title">Secure Payment</div>
             <form class="form payment-form" id="paymentForm">
                 <input type="hidden" name="plan" id="selectedPlan" value="monthly">
-                <div class="gateway-banner">
-                    <div>
-                        <div class="mini-title">Soundwave Test Gateway</div>
-                        <div class="helper">Works locally without Razorpay or Stripe. Use it to activate Premium in this project.</div>
-                    </div>
-                    <span class="tag">Test Mode</span>
-                </div>
                 <label>
                     Payment Method
                     <select name="method" required>
@@ -99,23 +85,15 @@
                         <option value="wallet">Wallets</option>
                     </select>
                 </label>
-                <label>
-                    Payment ID
-                    <input type="text" name="paymentReference" id="paymentReference" placeholder="UPI ID, card last 4, bank ref, or wallet id" required>
-                </label>
-                <button class="button" type="submit">Buy Premium</button>
+                <input type="hidden" name="paymentReference" id="paymentReference" value="soundwave-demo@upi">
+                <button class="button" type="submit">Proceed to Pay</button>
                 <div class="helper" id="paymentMessage"></div>
             </form>
-        </section>
-
-        <section class="panel">
-            <div class="section-title">Payment History</div>
-            <div class="list" id="paymentHistory"></div>
         </section>
     </div>
 
     <footer class="footer">
-        Made with love by Amanoteq. All rights reserved to Amanoteq
+        Made with ❤️ by Amandeep. All rights reserved to Amandeep
     </footer>
 
     <script src="JavaScript/navigation.js"></script>

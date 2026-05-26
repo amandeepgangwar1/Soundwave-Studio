@@ -10,7 +10,7 @@
     <script src="JavaScript/admin-access-control.js" defer></script>
 </head>
 
-<body>
+<body class="studio-page dashboard-page page-library">
     <div class="shell">
         <div class="topbar">
             <div class="logo">
@@ -28,36 +28,60 @@
             <button class="button ghost" id="logoutBtn">Logout</button>
         </div>
 
-        <section class="panel">
+        <section class="panel page-heading library-heading">
             <div class="section-title">Your Library</div>
-            <p class="muted">Saved playlists and liked songs live here.</p>
+            <p class="muted">All your saved playlists, liked songs, and more.</p>
         </section>
 
-        <div class="section-title">Saved Playlists</div>
-        <div class="grid" id="savedPlaylists"></div>
+        <div class="library-stack">
+            <details class="library-row">
+                <summary>
+                    <span class="library-icon saved" aria-hidden="true"></span>
+                    <span class="library-label"><strong>Saved Playlists</strong><small id="savedPlaylistsCount">0 playlists</small></span>
+                    <span class="library-arrow" aria-hidden="true">&#8250;</span>
+                </summary>
+                <div class="grid library-detail" id="savedPlaylists"></div>
+            </details>
 
-        <div class="section-title">Liked Songs</div>
-        <div class="panel">
-            <div class="list" id="likedSongs"></div>
-        </div>
+            <details class="library-row">
+                <summary>
+                    <span class="library-icon liked" aria-hidden="true"></span>
+                    <span class="library-label"><strong>Liked Songs</strong><small id="likedSongsCount">0 songs</small></span>
+                    <span class="library-arrow" aria-hidden="true">&#8250;</span>
+                </summary>
+                <div class="list library-detail" id="likedSongs"></div>
+            </details>
 
-        <div class="section-title">Your Playlists</div>
-        <div class="panel">
-            <div class="list" id="userPlaylists"></div>
-        </div>
+            <details class="library-row">
+                <summary>
+                    <span class="library-icon playlists" aria-hidden="true"></span>
+                    <span class="library-label"><strong>Your Playlists</strong><small id="userPlaylistsCount">0 playlists</small></span>
+                    <span class="library-arrow" aria-hidden="true">&#8250;</span>
+                </summary>
+                <div class="list library-detail" id="userPlaylists"></div>
+            </details>
 
-        <div class="section-title">Followed Artists</div>
-        <div class="panel">
-            <div class="list" id="followedArtists"></div>
-        </div>
+            <details class="library-row">
+                <summary>
+                    <span class="library-icon artists" aria-hidden="true"></span>
+                    <span class="library-label"><strong>Followed Artists</strong><small id="followedArtistsCount">0 artists</small></span>
+                    <span class="library-arrow" aria-hidden="true">&#8250;</span>
+                </summary>
+                <div class="list library-detail" id="followedArtists"></div>
+            </details>
 
-        <div class="section-title">Downloaded Songs</div>
-        <div class="panel">
-            <div class="list" id="downloadedSongs"></div>
+            <details class="library-row">
+                <summary>
+                    <span class="library-icon downloads" aria-hidden="true"></span>
+                    <span class="library-label"><strong>Downloaded Songs</strong><small id="downloadedSongsCount">0 songs</small></span>
+                    <span class="library-arrow" aria-hidden="true">&#8250;</span>
+                </summary>
+                <div class="list library-detail" id="downloadedSongs"></div>
+            </details>
         </div>
     </div>
     <footer class="footer">
-        Made with love by Amanoteq. All rights reserved to Amanoteq
+        Made with ❤️ by Amandeep. All rights reserved to Amandeep
     </footer>
 
     <script src="JavaScript/navigation.js"></script>

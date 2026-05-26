@@ -3,23 +3,23 @@
  * Integrates D3 waveform, color themes, and immersive theater mode
  */
 
-// Flag to track if we're already initialized
 let integrationInitialized = false;
-let retryCount = 0;
-let retryWarningShown = false;
-const MAX_RETRIES = 30;
 
 window.addEventListener("soundwave:player-ready", () => {
-  retryCount = 0;
   initializeWaveformIntegration();
 });
 
-window.addEventListener("DOMContentLoaded", () => {
-  // Wait for player to initialize
-  setTimeout(() => {
+function initializeExistingAudioElement() {
+  if (getAudioElement()) {
     initializeWaveformIntegration();
-  }, 1500);
-});
+  }
+}
+
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", initializeExistingAudioElement, { once: true });
+} else {
+  initializeExistingAudioElement();
+}
 
 function getPlayerState() {
   return window.soundwavePlayer || null;
@@ -38,17 +38,6 @@ function initializeWaveformIntegration() {
   const audioElement = getAudioElement();
 
   if (!audioElement) {
-    if (retryCount >= MAX_RETRIES) {
-      if (!retryWarningShown) {
-        retryWarningShown = true;
-        console.debug("Audio element was not available for optional player integration");
-      }
-      return;
-    }
-
-    retryCount++;
-    console.debug(`No audio element found (attempt ${retryCount}/${MAX_RETRIES}), retrying...`);
-    setTimeout(initializeWaveformIntegration, 800);
     return;
   }
 

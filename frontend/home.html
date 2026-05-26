@@ -11,7 +11,7 @@
     <script src="JavaScript/sw-register.js" defer></script>
 </head>
 
-<body>
+<body class="studio-page dashboard-page page-home">
     <div class="shell">
         <div class="topbar">
             <div class="page-nav">
@@ -35,15 +35,19 @@
             </div>
         </div>
 
-        <section class="panel">
+        <section class="panel home-welcome">
             <div class="section-title">Hello <span id="userName">there</span></div>
             <p class="muted">Pick a playlist, play songs, and save what you like.</p>
         </section>
 
-        <div class="section-title">Playlists</div>
         <div class="panel search-panel">
             <img class="icon-svg search-icon" src="img/searchbar.svg" alt="">
             <input id="playlistSearch" type="text" placeholder="Search playlists...">
+            <button class="button ghost small" type="button">All &#8964;</button>
+        </div>
+        <div class="section-heading-row">
+            <div class="section-title">Playlists</div>
+            <a class="muted section-more" href="browse.html">View all</a>
         </div>
         <div class="grid" id="playlistGrid"></div>
 
@@ -59,54 +63,56 @@
             </section>
         </div>
 
-        <div class="section-title">New & Trending</div>
-        <div class="grid two-col">
-            <section class="panel">
-                <div class="section-title compact-title">Trending Songs</div>
-                <div class="list" id="trendingSongs"></div>
-            </section>
-            <section class="panel">
-                <div class="section-title compact-title">New Releases</div>
-                <div class="list" id="newReleases"></div>
-            </section>
-        </div>
-
-        <div class="section-title">Quick Actions</div>
-        <div class="panel">
-            <div class="actions">
-                <a class="button ghost" href="search.html">Search Music</a>
-                <a class="button ghost" href="artists.html">Follow Artists</a>
-                <a class="button ghost" href="sections/playlist-management.html">Manage Playlists</a>
-                <a class="button ghost" href="premium.html">Premium Plans</a>
+        <div class="home-secondary">
+            <div class="section-title">New &amp; Trending</div>
+            <div class="grid two-col">
+                <section class="panel">
+                    <div class="section-title compact-title">Trending Songs</div>
+                    <div class="list" id="trendingSongs"></div>
+                </section>
+                <section class="panel">
+                    <div class="section-title compact-title">New Releases</div>
+                    <div class="list" id="newReleases"></div>
+                </section>
             </div>
-        </div>
 
-        <div class="section-title">Profile & Theme</div>
-        <div class="grid two-col">
-            <section class="panel profile-card">
-                <div class="section-title">Profile</div>
-                <div class="profile-row">
-                    <div class="avatar" id="profileAvatar">SW</div>
-                    <div>
-                        <div class="profile-name" id="profileName">Loading...</div>
-                        <div class="muted profile-email" id="profileEmail"></div>
+            <div class="section-title">Quick Actions</div>
+            <div class="panel">
+                <div class="actions">
+                    <a class="button ghost" href="search.html">Search Music</a>
+                    <a class="button ghost" href="artists.html">Follow Artists</a>
+                    <a class="button ghost" href="sections/playlist-management.html">Manage Playlists</a>
+                    <a class="button ghost" href="premium.html">Premium Plans</a>
+                </div>
+            </div>
+
+            <div class="section-title">Profile &amp; Theme</div>
+            <div class="grid two-col">
+                <section class="panel profile-card">
+                    <div class="section-title">Profile</div>
+                    <div class="profile-row">
+                        <div class="avatar" id="profileAvatar">SW</div>
+                        <div>
+                            <div class="profile-name" id="profileName">Loading...</div>
+                            <div class="muted profile-email" id="profileEmail"></div>
+                        </div>
                     </div>
-                </div>
-                <div class="profile-meta">
-                    <span class="tag" id="profilePlan">Free Plan</span>
-                    <span class="tag">JWT Secured</span>
-                </div>
-            </section>
+                    <div class="profile-meta">
+                        <span class="tag" id="profilePlan">Free Plan</span>
+                        <span class="tag">JWT Secured</span>
+                    </div>
+                </section>
 
-            <section class="panel">
-                <div class="section-title">Theme</div>
-                <button class="button ghost full" id="themeToggle">Switch to Light</button>
-                <div class="helper" id="themeHint">Dark mode enabled</div>
-            </section>
+                <section class="panel">
+                    <div class="section-title">Theme</div>
+                    <button class="button ghost full" id="themeToggle">Switch to Light</button>
+                    <div class="helper" id="themeHint">Dark mode enabled</div>
+                </section>
+            </div>
         </div>
     </div>
     <footer class="footer">
-        Made with love by Amanoteq. All rights reserved to Amanoteq
+        Made with ❤️ by Amandeep. All rights reserved to Amandeep
     </footer>
 
     <script src="JavaScript/navigation.js"></script>

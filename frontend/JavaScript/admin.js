@@ -34,6 +34,15 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
+function formatAdminDate(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+}
+
 const featuredArtistNames = [
   "A. R. Rahman",
   "Arijit Singh",
@@ -434,17 +443,35 @@ function wireAdminManagerPanels() {
 function renderUserAdminList(users) {
   const list = document.getElementById("userAdminList");
   if (!list) return;
-  if (!users.length) {
+  const query = document.getElementById("adminUserSearch")?.value.trim().toLowerCase() || "";
+  const visibleUsers = users.filter((user) =>
+    `${user.name} ${user.email}`.toLowerCase().includes(query)
+  );
+  if (!visibleUsers.length) {
     list.innerHTML = `<div class="muted">No users yet.</div>`;
     return;
   }
 
-  list.innerHTML = "";
-  users.forEach((user) => {
+  list.className = "admin-user-table";
+  list.innerHTML = `
+    <div class="admin-user-header">
+      <span>Name</span>
+      <span>Email</span>
+      <span>Role</span>
+      <span>Status</span>
+      <span>Joined On</span>
+      <span>Actions</span>
+    </div>
+  `;
+  visibleUsers.forEach((user) => {
     const item = document.createElement("div");
-    item.className = "list-item";
+    item.className = "list-item admin-user-row";
     item.innerHTML = `
-      <span>${escapeHtml(user.name)} <span class="muted">- ${escapeHtml(user.email)}</span></span>
+      <span class="admin-user-name">${escapeHtml(user.name)}</span>
+      <span class="muted">${escapeHtml(user.email)}</span>
+      <span>${user.isAdmin ? "Admin" : "User"}</span>
+      <span class="admin-user-status">Active</span>
+      <span class="muted">${escapeHtml(formatAdminDate(user.createdAt))}</span>
       <div class="actions-end">
         <select data-field="subscriptionType">
           <option value="free" ${user.subscriptionType === "free" ? "selected" : ""}>Free</option>
@@ -595,6 +622,7 @@ function renderReports(report) {
 let cachedPlaylists = [];
 let cachedArtists = [];
 let cachedAlbums = [];
+let cachedUsers = [];
 
 async function refreshAdminData() {
   [cachedPlaylists, cachedArtists, cachedAlbums] = await Promise.all([
@@ -624,8 +652,8 @@ async function refreshSongs() {
 }
 
 async function refreshUsers() {
-  const users = await loadUsers();
-  renderUserAdminList(users);
+  cachedUsers = await loadUsers();
+  renderUserAdminList(cachedUsers);
 }
 
 async function refreshArtists() {
@@ -660,6 +688,9 @@ async function init() {
   wireDropzones(songForm);
   wireDropzones(editForm);
   wireAdminManagerPanels();
+  document.getElementById("adminUserSearch")?.addEventListener("input", () => {
+    renderUserAdminList(cachedUsers);
+  });
 
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {

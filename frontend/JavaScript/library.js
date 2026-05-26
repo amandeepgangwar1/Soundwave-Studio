@@ -35,8 +35,16 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
+function setCount(id, count, singular, plural) {
+  const target = document.getElementById(id);
+  if (target) {
+    target.textContent = `${count} ${count === 1 ? singular : plural}`;
+  }
+}
+
 function renderPlaylists(playlists) {
   const grid = document.getElementById("savedPlaylists");
+  setCount("savedPlaylistsCount", playlists.length, "playlist", "playlists");
   grid.innerHTML = "";
 
   if (playlists.length === 0) {
@@ -73,6 +81,7 @@ function renderPlaylists(playlists) {
 
 function renderSongs(songs) {
   const list = document.getElementById("likedSongs");
+  setCount("likedSongsCount", songs.length, "song", "songs");
   list.innerHTML = "";
 
   if (songs.length === 0) {
@@ -116,6 +125,7 @@ function renderSongs(songs) {
 function renderFollowedArtists(artists) {
   const list = document.getElementById("followedArtists");
   if (!list) return;
+  setCount("followedArtistsCount", (artists || []).length, "artist", "artists");
   if (!artists || artists.length === 0) {
     list.innerHTML = `<div class="muted">No followed artists yet.</div>`;
     return;
@@ -131,6 +141,7 @@ function renderFollowedArtists(artists) {
 function renderUserPlaylists(playlists) {
   const list = document.getElementById("userPlaylists");
   if (!list) return;
+  setCount("userPlaylistsCount", playlists.length, "playlist", "playlists");
   if (!playlists.length) {
     list.innerHTML = `<div class="muted">No custom playlists yet.</div>`;
     return;
@@ -147,6 +158,7 @@ function renderDownloadedSongs() {
   const list = document.getElementById("downloadedSongs");
   if (!list) return;
   const downloads = getJSON("sw_downloads", []);
+  setCount("downloadedSongsCount", downloads.length, "song", "songs");
   if (!downloads.length) {
     list.innerHTML = `<div class="muted">No downloaded songs yet.</div>`;
     return;

@@ -3,7 +3,7 @@
  * Handles offline caching with proper 206 partial content handling
  */
 
-const CACHE_NAME = "soundwave-v2.5";
+const CACHE_NAME = "soundwave-v2.8";
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 const IS_LOCAL_DEV = LOCAL_HOSTS.has(self.location.hostname);
 const CACHE_URLS = [
@@ -31,6 +31,43 @@ const CACHE_URLS = [
   "/img/favicon.svg",
 ];
 
+function isRangeRequest(request) {
+  return request.headers.has("range");
+}
+
+function canCacheResponse(request, response) {
+  return (
+    request.method === "GET" &&
+    !isRangeRequest(request) &&
+    response &&
+    response.status === 200
+  );
+}
+
+async function precacheAssets() {
+  const cache = await caches.open(CACHE_NAME);
+
+  await Promise.all(
+    CACHE_URLS.map(async (assetUrl) => {
+      const request = new Request(new URL(assetUrl, self.location.origin), {
+        cache: "reload",
+      });
+
+      try {
+        const response = await fetch(request);
+        if (!canCacheResponse(request, response)) {
+          console.debug("Skipping non-cacheable application asset:", assetUrl, response.status);
+          return;
+        }
+
+        await cache.put(request, response);
+      } catch (error) {
+        console.warn("Could not cache application asset:", assetUrl, error);
+      }
+    })
+  );
+}
+
 // Install Service Worker and cache assets
 self.addEventListener("install", (event) => {
   if (IS_LOCAL_DEV) {
@@ -39,17 +76,11 @@ self.addEventListener("install", (event) => {
   }
 
   event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
+    (async () => {
       console.log("Caching application assets");
-
-      try {
-        await cache.addAll(CACHE_URLS);
-      } catch (err) {
-        console.warn("Some assets failed to cache:", err);
-      }
-
-      return self.skipWaiting();
-    })
+      await precacheAssets();
+      await self.skipWaiting();
+    })()
   );
 });
 
@@ -89,19 +120,6 @@ self.addEventListener("activate", (event) => {
     })
   );
 });
-
-function isRangeRequest(request) {
-  return request.headers.has("range");
-}
-
-function canCacheResponse(request, response) {
-  return (
-    request.method === "GET" &&
-    !isRangeRequest(request) &&
-    response &&
-    response.status === 200
-  );
-}
 
 async function putInCache(request, response, label = "response") {
   if (!canCacheResponse(request, response)) {

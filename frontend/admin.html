@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="Cascading Style Sheets/app.css">
 </head>
 
-<body>
+<body class="studio-page dashboard-page page-admin">
     <div class="shell">
         <div class="topbar">
             <div class="page-nav">
@@ -33,7 +33,7 @@
             </div>
         </div>
 
-        <section class="panel">
+        <section class="panel admin-banner">
             <div class="section-title">Admin Console</div>
             <p class="muted" id="adminStatus">Checking sign-in...</p>
         </section>
@@ -194,7 +194,13 @@
         </div>
 
         <section class="panel admin-tab hidden" data-tab="users">
-            <div class="section-title">Manage Users</div>
+            <div class="section-title">Users</div>
+            <p class="muted admin-users-subtitle">Manage user accounts and permissions.</p>
+            <div class="panel search-panel admin-user-search">
+                <img class="icon-svg search-icon" src="img/searchbar.svg" alt="">
+                <input id="adminUserSearch" type="text" placeholder="Search users...">
+                <button class="button ghost small" type="button">Filter &#8964;</button>
+            </div>
             <div class="list" id="userAdminList"></div>
         </section>
 
@@ -207,7 +213,7 @@
 
     </div>
     <footer class="footer">
-        Made with love by Amanoteq. All rights reserved to Amanoteq
+        Made with ❤️ by Amandeep. All rights reserved to Amandeep
     </footer>
 
     <script src="JavaScript/navigation.js"></script>

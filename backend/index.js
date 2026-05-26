@@ -411,6 +411,37 @@ function songAssetUrl(folder, filename) {
   return `/songs/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`;
 }
 
+function hasPlayableAudioSignature(buffer) {
+  if (!buffer || buffer.length < 4) return false;
+
+  const startsWith = (value) => buffer.subarray(0, value.length).equals(Buffer.from(value));
+  const hasAt = (offset, value) => buffer.subarray(offset, offset + value.length).equals(Buffer.from(value));
+
+  return (
+    startsWith("ID3") ||
+    (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) ||
+    (startsWith("RIFF") && hasAt(8, "WAVE")) ||
+    startsWith("OggS") ||
+    startsWith("fLaC") ||
+    hasAt(4, "ftyp") ||
+    (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3)
+  );
+}
+
+async function isPlayableAudioFile(target) {
+  let handle;
+  try {
+    handle = await fs.open(target, "r");
+    const buffer = Buffer.alloc(16);
+    const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0);
+    return hasPlayableAudioSignature(buffer.subarray(0, bytesRead));
+  } catch (err) {
+    return false;
+  } finally {
+    if (handle) await handle.close();
+  }
+}
+
 async function resolveSongFileUrl(preferredFolder, filename) {
   const safeFilename = path.basename(String(filename || ""));
   if (!safeFilename) return "";
@@ -420,7 +451,7 @@ async function resolveSongFileUrl(preferredFolder, filename) {
     try {
       const target = ensureInsideSongsRoot(path.join(songsRoot, folder, safeFilename));
       const stats = await fs.stat(target);
-      return stats.isFile();
+      return stats.isFile() && await isPlayableAudioFile(target);
     } catch (err) {
       return false;
     }
@@ -497,6 +528,16 @@ async function ensureCatalogMetadata() {
     if (!playlist) continue;
 
     const fileUrl = await resolveSongFileUrl(playlist.folder, song.filename);
+    if (!fileUrl) {
+      await Promise.all([
+        Song.deleteOne({ songId: song.songId }),
+        LikedSong.deleteMany({ songId: song.songId }),
+        UserPlaylistSong.deleteMany({ songId: song.songId })
+      ]);
+      console.warn(`Removed unplayable track from catalog: ${song.filename}`);
+      continue;
+    }
+
     const meta = parseSongMeta(song.filename);
     const artist = await getOrCreateArtist(meta.artist);
     const albumTitle = meta.album === "Single" ? playlist.title : meta.album;
@@ -511,8 +552,7 @@ async function ensureCatalogMetadata() {
     if (!song.artistId) update.artistId = artist.artistId;
     if (!song.albumId) update.albumId = album.albumId;
     if (!song.genre) update.genre = "Music";
-    if (fileUrl && song.fileUrl !== fileUrl) update.fileUrl = fileUrl;
-    if (!fileUrl && !song.fileUrl) update.fileUrl = songAssetUrl(playlist.folder, song.filename);
+    if (song.fileUrl !== fileUrl) update.fileUrl = fileUrl;
 
     if (Object.keys(update).length) {
       await Song.updateOne({ songId: song.songId }, update);
@@ -2252,6 +2292,11 @@ async function prepareApp() {
         res.status(400).json({ error: "Audio file is required" });
         return;
       }
+      const invalidAudio = audioFiles.find((file) => !hasPlayableAudioSignature(file.buffer));
+      if (invalidAudio) {
+        res.status(400).json({ error: `${invalidAudio.originalname} is not a playable audio file` });
+        return;
+      }
 
       const folderPath = path.join(songsRoot, playlist.folder);
       await fs.mkdir(folderPath, { recursive: true });
@@ -2348,6 +2393,10 @@ async function prepareApp() {
 
       const coverFile = req.files?.cover?.[0];
       const audioFile = req.files?.audio?.[0];
+      if (audioFile && !hasPlayableAudioSignature(audioFile.buffer)) {
+        res.status(400).json({ error: `${audioFile.originalname} is not a playable audio file` });
+        return;
+      }
       const metadataUpdate = {};
       const title = String(req.body?.title || "").trim();
       const genre = String(req.body?.genre || "").trim();
