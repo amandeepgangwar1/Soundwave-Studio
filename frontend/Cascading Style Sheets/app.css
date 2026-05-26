@@ -3807,7 +3807,8 @@ body[data-theme-mode="light"] .artist-card {
 
 .content > .premium-player.player-stage .theater-button,
 .content > .premium-player.player-stage #immersiveTheaterBtn.theater-button {
-  width: 313%;
+  width: 100%;
+  max-width: 100%;
   min-height: 52px;
   justify-content: center;
   gap: 12px;
