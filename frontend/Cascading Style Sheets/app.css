@@ -6109,14 +6109,44 @@ body.studio-page {
 }
 
 .page-search .tab-strip {
-  margin-top: 0;
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 20px;
+  margin-bottom: 24px;
+  padding: 16px 0;
+  align-items: center;
 }
 
 .page-search .tab-strip .pill-btn {
-  min-height: 30px;
-  padding: 0 15px;
-  font-size: 10px;
+  min-height: 48px;
+  padding: 10px 28px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #2a3f4d;
+  background: rgba(15, 20, 28, 0.8);
+  color: #b6c0cc;
+  transition: all 250ms ease;
+  cursor: pointer;
+}
+
+.page-search .tab-strip .pill-btn:hover {
+  border-color: #3ddc84;
+  color: #eef2f6;
+  background: rgba(20, 30, 40, 0.95);
+  transform: translateY(-2px);
+}
+
+.page-search .tab-strip .pill-btn.active {
+  background: linear-gradient(135deg, #3ddc84, #2db86b);
+  color: #0b0f14;
+  border-color: #3ddc84;
+  font-weight: 800;
+  box-shadow: 0 8px 20px rgba(61, 220, 132, 0.25);
 }
 
 .page-search .result-section {
@@ -6240,6 +6270,11 @@ body.studio-page {
 .page-library .library-icon.liked::before {
   content: "\2661";
   color: #e870d8;
+}
+
+.page-library .library-icon.all::before {
+  content: "\266B";
+  color: #4be18a;
 }
 
 .page-library .library-icon.playlists::before {

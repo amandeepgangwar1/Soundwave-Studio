@@ -7,6 +7,16 @@ const { artistProfiles } = require("./catalog-data");
 const MONGO_URI =
   process.env.MONGO_URI || "mongodb://127.0.0.1:27017/soundwave";
 const songsRoot = path.join(__dirname, "..", "frontend", "songs");
+const supportedAudioExtensions = new Set([
+  ".mp3",
+  ".wav",
+  ".ogg",
+  ".oga",
+  ".flac",
+  ".m4a",
+  ".aac",
+  ".webm"
+]);
 
 const counterSchema = new mongoose.Schema({
   _id: { type: String, required: true },
@@ -171,6 +181,163 @@ async function getNextId(name) {
   return doc.seq;
 }
 
+function hasPlayableAudioSignature(buffer) {
+  if (!buffer || buffer.length < 4) return false;
+
+  const startsWith = (value) => buffer.subarray(0, value.length).equals(Buffer.from(value));
+  const hasAt = (offset, value) => buffer.subarray(offset, offset + value.length).equals(Buffer.from(value));
+
+  return (
+    startsWith("ID3") ||
+    (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) ||
+    (startsWith("RIFF") && hasAt(8, "WAVE")) ||
+    startsWith("OggS") ||
+    startsWith("fLaC") ||
+    hasAt(4, "ftyp") ||
+    (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3)
+  );
+}
+
+async function isPlayableAudioFile(target) {
+  let handle;
+  try {
+    handle = await fs.open(target, "r");
+    const buffer = Buffer.alloc(16);
+    const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0);
+    return hasPlayableAudioSignature(buffer.subarray(0, bytesRead));
+  } catch (err) {
+    return false;
+  } finally {
+    if (handle) await handle.close();
+  }
+}
+
+function isAudioFilename(filename) {
+  return supportedAudioExtensions.has(path.extname(filename).toLowerCase());
+}
+
+async function readPlaylistInfo(folderName) {
+  const infoPath = path.join(songsRoot, folderName, "info.json");
+  try {
+    const raw = await fs.readFile(infoPath, "utf8");
+    const info = JSON.parse(raw);
+    return {
+      hasInfo: true,
+      info: info && typeof info === "object" ? info : {}
+    };
+  } catch (err) {
+    return { hasInfo: false, info: {} };
+  }
+}
+
+async function listPlayableSongs(folderPath, infoSongs = []) {
+  const candidates = [];
+  const seen = new Set();
+
+  function addCandidate(filename) {
+    const safeName = path.basename(String(filename || ""));
+    if (!safeName || !isAudioFilename(safeName) || seen.has(safeName)) return;
+    seen.add(safeName);
+    candidates.push(safeName);
+  }
+
+  infoSongs.forEach(addCandidate);
+
+  try {
+    const entries = await fs.readdir(folderPath, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isFile()) addCandidate(entry.name);
+    }
+  } catch (err) {
+    return [];
+  }
+
+  const playable = [];
+  for (const filename of candidates) {
+    const target = path.join(folderPath, filename);
+    try {
+      const stats = await fs.stat(target);
+      if (stats.isFile() && await isPlayableAudioFile(target)) {
+        playable.push(filename);
+      }
+    } catch (err) {
+      // Skip files listed in info.json that are no longer present.
+    }
+  }
+  return playable;
+}
+
+async function syncCatalogFromFiles() {
+  let entries = [];
+  try {
+    entries = await fs.readdir(songsRoot, { withFileTypes: true });
+  } catch (err) {
+    console.error("Songs folder not found:", err.message);
+    return;
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+
+    const folderPath = path.join(songsRoot, entry.name);
+    const { hasInfo, info } = await readPlaylistInfo(entry.name);
+    const infoSongs = Array.isArray(info.songs) ? info.songs : [];
+    const songs = await listPlayableSongs(folderPath, infoSongs);
+    if (!hasInfo && songs.length === 0) continue;
+
+    const title = info.title || entry.name.replace(/_/g, " ");
+    const description = info.description || "Playlist";
+    const folder = info.folder || entry.name;
+    const cover = info.cover || "cover.jpg";
+
+    let playlist = await Playlist.findOne({ folder }).lean();
+    if (!playlist && folder !== entry.name) {
+      playlist = await Playlist.findOne({ folder: entry.name }).lean();
+    }
+    if (!playlist && hasInfo) {
+      playlist = await Playlist.findOne({ title }).lean();
+    }
+
+    if (!playlist) {
+      const playlistId = await getNextId("playlist");
+      const created = await Playlist.create({
+        playlistId,
+        title,
+        description,
+        folder,
+        cover
+      });
+      playlist = created.toObject();
+    }
+
+    if (songs.length === 0) continue;
+
+    const existingSongs = await Song.find({ playlistId: playlist.playlistId })
+      .select("filename trackNumber")
+      .lean();
+    const existingFilenames = new Set(existingSongs.map((song) => song.filename));
+    let nextTrack = existingSongs.reduce(
+      (max, song) => Math.max(max, Number(song.trackNumber || 0)),
+      0
+    ) + 1;
+
+    for (const filename of songs) {
+      if (existingFilenames.has(filename)) continue;
+
+      const songId = await getNextId("song");
+      await Song.create({
+        songId,
+        playlistId: playlist.playlistId,
+        fileUrl: `/songs/${playlist.folder}/${filename}`,
+        filename,
+        trackNumber: nextTrack
+      });
+      existingFilenames.add(filename);
+      nextTrack += 1;
+    }
+  }
+}
+
 async function seedFeaturedArtists() {
   for (const artist of artistProfiles) {
     const existing = await Artist.findOne({ name: artist.name });
@@ -193,57 +360,7 @@ async function seedFeaturedArtists() {
 
 async function seedIfEmpty() {
   await seedFeaturedArtists();
-
-  const count = await Playlist.countDocuments();
-  if (count > 0) return;
-
-  let entries = [];
-  try {
-    entries = await fs.readdir(songsRoot, { withFileTypes: true });
-  } catch (err) {
-    console.error("Songs folder not found:", err.message);
-    return;
-  }
-
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const infoPath = path.join(songsRoot, entry.name, "info.json");
-    let info;
-    try {
-      const raw = await fs.readFile(infoPath, "utf8");
-      info = JSON.parse(raw);
-    } catch (err) {
-      continue;
-    }
-
-    const title = info.title || entry.name;
-    const description = info.description || "Playlist";
-    const folder = info.folder || entry.name;
-    const cover = info.cover || "cover.jpg";
-    const songs = Array.isArray(info.songs) ? info.songs : [];
-
-    const playlistId = await getNextId("playlist");
-    await Playlist.create({
-      playlistId,
-      title,
-      description,
-      folder,
-      cover
-    });
-
-    let track = 1;
-    for (const filename of songs) {
-      const songId = await getNextId("song");
-      await Song.create({
-        songId,
-        playlistId,
-        fileUrl: `/songs/${folder}/${filename}`,
-        filename,
-        trackNumber: track
-      });
-      track += 1;
-    }
-  }
+  await syncCatalogFromFiles();
 }
 
 module.exports = {

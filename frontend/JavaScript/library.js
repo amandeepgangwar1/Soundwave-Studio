@@ -13,6 +13,13 @@ async function loadLibrary() {
   return res.json();
 }
 
+async function loadAllSongs() {
+  const res = await fetch("/api/songs?limit=1000", { credentials: "include" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.songs || [];
+}
+
 async function loadUserPlaylists() {
   const res = await fetch("/api/user-playlists", { credentials: "include" });
   if (!res.ok) return [];
@@ -40,6 +47,21 @@ function setCount(id, count, singular, plural) {
   if (target) {
     target.textContent = `${count} ${count === 1 ? singular : plural}`;
   }
+}
+
+function openPlayer(song) {
+  if (!song?.playlistId || !song?.id) return;
+  window.location.href = `/player.html?playlist=${encodeURIComponent(song.playlistId)}&song=${encodeURIComponent(song.id)}`;
+}
+
+async function toggleLike(songId) {
+  if (!songId) return null;
+  const res = await fetch(`/api/library/songs/${songId}/toggle`, {
+    method: "POST",
+    credentials: "include"
+  });
+  if (!res.ok) return null;
+  return res.json();
 }
 
 function renderPlaylists(playlists) {
@@ -102,22 +124,58 @@ function renderSongs(songs) {
 
     item.querySelector('[data-action="play"]').addEventListener("click", (event) => {
       event.stopPropagation();
-      window.location.href = `/player.html?playlist=${song.playlistId}&song=${song.id}`;
+      openPlayer(song);
     });
 
     item.querySelector('[data-action="remove"]').addEventListener("click", async (event) => {
       event.stopPropagation();
-      const res = await fetch(`/api/library/songs/${song.id}/toggle`, {
-        method: "POST",
-        credentials: "include"
-      });
-      if (res.ok) init();
+      const result = await toggleLike(song.id);
+      if (result) init();
     });
 
     item.addEventListener("click", () => {
-      window.location.href = `/player.html?playlist=${song.playlistId}&song=${song.id}`;
+      openPlayer(song);
     });
 
+    list.appendChild(item);
+  });
+}
+
+function renderAllSongs(songs, likedIds = new Set()) {
+  const list = document.getElementById("allSongs");
+  if (!list) return;
+  setCount("allSongsCount", songs.length, "song", "songs");
+  list.innerHTML = "";
+
+  if (songs.length === 0) {
+    list.innerHTML = `<div class="muted">No songs in the database yet.</div>`;
+    return;
+  }
+
+  songs.forEach((song) => {
+    const item = document.createElement("div");
+    const liked = likedIds.has(song.id);
+    item.className = "list-item";
+    item.innerHTML = `
+      <span>${escapeHtml(song.title || song.filename)} <span class="muted">- ${escapeHtml(song.artistName || song.playlistTitle)}</span></span>
+      <div class="actions-end">
+        <button class="button ghost" data-action="play">Play</button>
+        <button class="button ghost" data-action="like">${liked ? "Liked" : "Like"}</button>
+      </div>
+    `;
+
+    item.querySelector('[data-action="play"]').addEventListener("click", (event) => {
+      event.stopPropagation();
+      openPlayer(song);
+    });
+
+    item.querySelector('[data-action="like"]').addEventListener("click", async (event) => {
+      event.stopPropagation();
+      const result = await toggleLike(song.id);
+      if (result) init();
+    });
+
+    item.addEventListener("click", () => openPlayer(song));
     list.appendChild(item);
   });
 }
@@ -184,13 +242,16 @@ async function init() {
   if (!user) return;
 
   document.getElementById("logoutBtn").onclick = logout;
-  const [data, userPlaylists] = await Promise.all([
+  const [data, userPlaylists, allSongs] = await Promise.all([
     loadLibrary(),
-    loadUserPlaylists()
+    loadUserPlaylists(),
+    loadAllSongs()
   ]);
   if (!data) return;
+  const likedIds = new Set((data.songs || []).map((song) => song.id));
   renderPlaylists(data.playlists);
   renderSongs(data.songs);
+  renderAllSongs(allSongs, likedIds);
   renderFollowedArtists(data.followedArtists);
   renderUserPlaylists(userPlaylists);
   renderDownloadedSongs();

@@ -983,10 +983,28 @@ async function prepareApp() {
       return;
     }
 
-    const user = await User.findOne({
-      $or: [{ email: normalizedEmail }, { phone: loginId }]
-    }).lean();
+    let user = null;
+    const phoneKey = loginId.replace(/\D/g, "");
+
+    // First try exact email match
+    user = await User.findOne({ email: normalizedEmail }).lean();
+    
+    // If not found and looks like phone, search by phone
+    if (!user && phoneKey) {
+      user = await User.findOne({
+        $or: [
+          { phone: loginId },
+          { email: `${phoneKey}@phone.soundwave.local` }
+        ]
+      }).lean();
+    }
+    
     if (!user) {
+      res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+
+    if (!user.passwordHash) {
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
@@ -1022,10 +1040,28 @@ async function prepareApp() {
       return;
     }
 
-    const user = await User.findOne({
-      $or: [{ email: normalizedEmail }, { phone: loginId }]
-    }).lean();
+    let user = null;
+    const phoneKey = loginId.replace(/\D/g, "");
+
+    // First try exact email match
+    user = await User.findOne({ email: normalizedEmail }).lean();
+    
+    // If not found and looks like phone, search by phone
+    if (!user && phoneKey) {
+      user = await User.findOne({
+        $or: [
+          { phone: loginId },
+          { email: `${phoneKey}@phone.soundwave.local` }
+        ]
+      }).lean();
+    }
+    
     if (!user) {
+      res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+
+    if (!user.passwordHash) {
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
@@ -1124,6 +1160,60 @@ async function prepareApp() {
       songs: songsWithCovers
     });
   });
+
+  app.get("/api/songs", requireAuth(async (req, res) => {
+    const requestedLimit = Number(req.query.limit);
+    const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 1000)
+      : 1000;
+    const query = String(req.query.q || "").trim();
+    const regex = query ? new RegExp(escapeRegExp(query), "i") : null;
+
+    const songs = await Song.find(
+      regex ? { $or: [{ title: regex }, { filename: regex }, { genre: regex }] } : {}
+    )
+      .sort({ playlistId: 1, trackNumber: 1, title: 1 })
+      .limit(limit)
+      .select("songId filename playlistId title artistId albumId genre duration fileUrl")
+      .lean();
+
+    const playlistIds = Array.from(new Set(songs.map((song) => song.playlistId)));
+    const artistIds = Array.from(new Set(songs.map((song) => song.artistId).filter(Boolean)));
+    const albumIds = Array.from(new Set(songs.map((song) => song.albumId).filter(Boolean)));
+    const [playlists, artists, albums] = await Promise.all([
+      playlistIds.length ? Playlist.find({ playlistId: { $in: playlistIds } }).lean() : [],
+      artistIds.length ? Artist.find({ artistId: { $in: artistIds } }).lean() : [],
+      albumIds.length ? Album.find({ albumId: { $in: albumIds } }).lean() : []
+    ]);
+
+    const playlistMap = new Map(playlists.map((playlist) => [playlist.playlistId, playlist]));
+    const artistMap = new Map(artists.map((artist) => [artist.artistId, artist]));
+    const albumMap = new Map(albums.map((album) => [album.albumId, album]));
+    const coverMaps = new Map(
+      await Promise.all(
+        playlists.map(async (playlist) => [
+          playlist.playlistId,
+          await loadSongCoverMap(playlist.folder)
+        ])
+      )
+    );
+
+    const rows = await Promise.all(
+      songs.map(async (row) => {
+        const playlist = playlistMap.get(row.playlistId);
+        const songCoverMap = coverMaps.get(row.playlistId) || new Map();
+        return {
+          ...toSongDto(row, playlistMap, artistMap, albumMap),
+          coverUrl:
+            songCoverMap.get(row.filename) ||
+            (playlist ? await resolveSongCover(playlist.folder, row.filename) : null) ||
+            (playlist ? `/songs/${playlist.folder}/${playlist.cover}` : "/img/music.svg")
+        };
+      })
+    );
+
+    res.json({ songs: rows });
+  }));
 
   app.get("/api/search", requireAuth(async (req, res) => {
     const query = String(req.query.q || "").trim();

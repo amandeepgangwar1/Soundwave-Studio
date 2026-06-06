@@ -13,6 +13,7 @@
     <div id="immersive-theater">
         <!-- Main visualization area -->
         <div id="theater-backdrop"></div>
+        <img id="theater-bg-cover" class="theater-bg-cover" src="img/soundwave.svg" alt="" aria-hidden="true">
         
         <!-- D3 Waveform Visualizer -->
         <div id="waveform-d3-viz" class="waveform-container"></div>
@@ -22,6 +23,8 @@
         
         <!-- Particle System -->
         <canvas id="particle-canvas" class="particle-layer"></canvas>
+        <div id="theater-eq-bars" class="theater-eq-bars" aria-hidden="true"></div>
+        <div class="liquid-visualizer" aria-hidden="true"></div>
 
         <!-- Close Button -->
         <button id="exit-theater" class="exit-btn" title="Exit immersive mode">
@@ -30,6 +33,10 @@
         
         <!-- Centered Artwork -->
         <div class="artwork-disc">
+            <svg class="artwork-progress-ring" viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="ring-track" cx="60" cy="60" r="56"></circle>
+                <circle id="artwork-progress" class="ring-progress" cx="60" cy="60" r="56"></circle>
+            </svg>
             <img id="theater-album-art" src="img/soundwave.svg" alt="Album Art" class="spinning-disc">
             <div class="disc-glow"></div>
         </div>
@@ -98,11 +105,135 @@
         <!-- Track Info Overlay -->
         <div class="track-info-overlay">
             <div class="track-info">
+                <div class="now-playing-badge">Now Playing</div>
                 <h2 id="theater-track-title">Now Playing</h2>
                 <p id="theater-track-artist">Artist</p>
                 <p id="theater-track-album" class="muted">Album</p>
+                <div class="track-mini-card" id="trackMiniCard" aria-live="polite">
+                    <span id="miniGenre">Genre: Music</span>
+                    <span id="miniQuality">Quality: 320kbps</span>
+                    <span id="miniPlays">Plays: 0</span>
+                </div>
             </div>
         </div>
+
+        <div class="theater-mode-dock" aria-label="Theater controls">
+            <button class="mode-dock-btn active" data-panel="visualizerPanel" type="button">Visuals</button>
+            <button class="mode-dock-btn" data-panel="artworkPanel" type="button">Artwork</button>
+            <button class="mode-dock-btn" data-panel="backgroundPanel" type="button">Scene</button>
+            <button class="mode-dock-btn" data-panel="effectsPanel" type="button">Audio</button>
+        </div>
+
+        <div class="theater-option-panel active" id="visualizerPanel" aria-label="Visualizer style">
+            <button class="theater-chip active" data-visualizer-mode="blend" type="button">Blend</button>
+            <button class="theater-chip" data-visualizer-mode="waveform" type="button">Wave</button>
+            <button class="theater-chip" data-visualizer-mode="radial" type="button">Circle</button>
+            <button class="theater-chip" data-visualizer-mode="bars" type="button">Bars</button>
+            <button class="theater-chip" data-visualizer-mode="starfield" type="button">Starfield</button>
+            <button class="theater-chip" data-visualizer-mode="liquid" type="button">Liquid</button>
+        </div>
+
+        <div class="theater-option-panel" id="artworkPanel" aria-label="Artwork style">
+            <button class="theater-chip active" data-artwork-mode="vinyl" type="button">Vinyl</button>
+            <button class="theater-chip" data-artwork-mode="cover" type="button">Cover</button>
+            <button class="theater-chip" data-artwork-mode="cd" type="button">CD</button>
+            <button class="theater-chip" data-artwork-mode="cassette" type="button">Cassette</button>
+            <button class="theater-chip" data-artwork-mode="poster" type="button">Poster</button>
+            <button class="theater-chip" data-artwork-mode="blur" type="button">Blur</button>
+        </div>
+
+        <div class="theater-option-panel" id="backgroundPanel" aria-label="Background style">
+            <button class="theater-chip active" data-background-style="aurora" type="button">Aurora</button>
+            <button class="theater-chip" data-background-style="nightclub" type="button">Club</button>
+            <button class="theater-chip" data-background-style="galaxy" type="button">Galaxy</button>
+            <button class="theater-chip" data-background-style="rain" type="button">Rain</button>
+            <button class="theater-chip" data-background-style="sunset" type="button">Sunset</button>
+            <button class="theater-chip" data-background-style="vinyl-room" type="button">Vinyl Room</button>
+            <button class="theater-chip" data-background-style="minimal" type="button">Minimal</button>
+        </div>
+
+        <div class="theater-option-panel" id="effectsPanel" aria-label="Audio effects">
+            <label class="theater-select-field">Speed
+                <select id="playbackSpeed">
+                    <option value="0.75">0.75x</option>
+                    <option value="1" selected>1x</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                </select>
+            </label>
+            <label class="theater-select-field">Effect
+                <select id="audioEffect">
+                    <option value="flat" selected>Flat</option>
+                    <option value="bass">Bass Boost</option>
+                    <option value="spatial">Spatial</option>
+                    <option value="soft">Soft Reverb</option>
+                </select>
+            </label>
+            <button class="theater-chip" id="saveTheaterPreset" type="button">Save Preset</button>
+            <button class="theater-chip" id="resetTheaterPreset" type="button">Reset</button>
+        </div>
+
+        <div class="theater-actions-panel" aria-label="Track actions">
+            <button class="theater-action-btn" id="theaterLike" type="button">Favorite</button>
+            <button class="theater-action-btn" id="theaterShare" type="button">Share</button>
+            <a class="theater-action-btn" id="theaterDownload" href="#" download>Download</a>
+            <button class="theater-action-btn" id="toggleLyrics" type="button">Lyrics</button>
+            <button class="theater-action-btn" id="toggleQueue" type="button">Up Next</button>
+            <button class="theater-action-btn" id="toggleShortcuts" type="button">Keys</button>
+            <button class="theater-action-btn" id="toggleRoom" type="button">Room</button>
+        </div>
+
+        <aside class="queue-drawer" id="queueDrawer" aria-label="Up next queue" hidden>
+            <div class="drawer-head">
+                <div>
+                    <strong>Up Next</strong>
+                    <span>Drag songs to reorder</span>
+                </div>
+                <button class="theme-panel-close" id="closeQueue" type="button" aria-label="Close queue">&times;</button>
+            </div>
+            <div class="queue-list" id="theaterQueueList"></div>
+        </aside>
+
+        <aside class="shortcuts-overlay" id="shortcutsOverlay" aria-label="Keyboard shortcuts" hidden>
+            <div class="drawer-head">
+                <div>
+                    <strong>Keyboard Shortcuts</strong>
+                    <span>Fast control for theater mode</span>
+                </div>
+                <button class="theme-panel-close" id="closeShortcuts" type="button" aria-label="Close shortcuts">&times;</button>
+            </div>
+            <div class="shortcut-grid">
+                <span>Space</span><strong>Play / Pause</strong>
+                <span>&larr; / &rarr;</span><strong>Seek 10 seconds</strong>
+                <span>M</span><strong>Mute</strong>
+                <span>L</span><strong>Lyrics</strong>
+                <span>T</span><strong>Theme panel</strong>
+                <span>Q</span><strong>Queue</strong>
+                <span>V</span><strong>Cycle visualizer</strong>
+                <span>A</span><strong>Cycle artwork</strong>
+                <span>Esc</span><strong>Exit</strong>
+            </div>
+        </aside>
+
+        <aside class="room-panel" id="roomPanel" aria-label="Listening room" hidden>
+            <div class="drawer-head">
+                <div>
+                    <strong>Listening Room</strong>
+                    <span>Share this theater state</span>
+                </div>
+                <button class="theme-panel-close" id="closeRoom" type="button" aria-label="Close room">&times;</button>
+            </div>
+            <p class="room-copy">Copy a session link with the current song, time, theme, visualizer, and artwork mode. A realtime room backend can attach here later.</p>
+            <button class="theater-action-btn" id="copyRoomLink" type="button">Copy Room Link</button>
+        </aside>
+
+        <div class="ambient-idle" id="ambientIdle" aria-hidden="true">
+            <span id="idleClock">00:00</span>
+            <strong>Paused</strong>
+            <small>Press Space to resume</small>
+        </div>
+
+        <div class="theater-toast" id="theaterToast" role="status" aria-live="polite"></div>
     </div>
 
     <footer class="footer">
