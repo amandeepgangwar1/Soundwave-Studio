@@ -5,7 +5,7 @@ async function handleAuth(formId, endpoint, errorId, redirect = "/home.html") {
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const errorEl = document.getElementById(errorId);
-    if (errorEl) errorEl.textContent = "";
+    if (errorEl) errorEl.innerHTML = "";
 
     const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
@@ -20,7 +20,17 @@ async function handleAuth(formId, endpoint, errorId, redirect = "/home.html") {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Authentication failed");
+        const message = data.error || "Authentication failed";
+        if (endpoint.includes("/api/auth/login") && /user not found|invalid credentials|no account|not found/i.test(message)) {
+          if (errorEl) {
+            errorEl.innerHTML = `No account yet? <a href="/signup.html">Create one</a>.`;
+          }
+          setTimeout(() => {
+            window.location.href = "/signup.html";
+          }, 800);
+          return;
+        }
+        throw new Error(message);
       }
 
       if (window.showAuthOverlay) {
