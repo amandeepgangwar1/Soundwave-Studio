@@ -21,22 +21,33 @@ async function handleAuth(formId, endpoint, errorId, redirect = "/home.html") {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         const message = data.error || "Authentication failed";
-        if (endpoint.includes("/api/auth/login") && /user not found|invalid credentials|no account|not found/i.test(message)) {
-          if (errorEl) {
-            errorEl.innerHTML = `No account yet? <a href="/signup.html">Create one</a>.`;
+        const isLogin = endpoint.includes("/login");
+        // The backend returns a generic "Invalid credentials" for both a wrong
+        // password AND an unknown account, so we must NOT force-redirect people
+        // to signup — that traps existing users who simply mistyped a password.
+        // Show the error inline, and (for logins) offer an opt-in signup link.
+        if (errorEl) {
+          errorEl.textContent = message;
+          if (isLogin) {
+            const signupUrl = endpoint.includes("/api/admin/")
+              ? "/admin-signup.html"
+              : `/signup.html${window.location.search || ""}`;
+            const hint = document.createElement("div");
+            hint.className = "auth-error-hint";
+            hint.innerHTML = `No account yet? <a href="${signupUrl}">Create one</a>.`;
+            errorEl.appendChild(hint);
           }
-          setTimeout(() => {
-            window.location.href = "/signup.html";
-          }, 800);
-          return;
         }
-        throw new Error(message);
+        return;
       }
 
       if (window.showAuthOverlay) {
         await window.showAuthOverlay("Logging in...");
       }
-      window.location.href = redirect;
+      const destination = endpoint.includes("/api/admin/")
+        ? "/admin.html"
+        : (window.SoundwaveAuthRedirect?.getSafeNext(redirect) || redirect);
+      window.location.href = destination;
     } catch (err) {
       if (errorEl) errorEl.textContent = err.message;
     }

@@ -55,20 +55,28 @@ app.use(cookieParser());
 
 app.use(async (req, res, next) => {
   const adminAssets =
-    req.path === "/admin.html" || req.path === "/JavaScript/admin.js";
+    req.path === "/admin.html" ||
+    req.path === "/admin" ||
+    req.path === "/admin/" ||
+    req.path === "/JavaScript/admin.js";
   if (!adminAssets) return next();
 
-  const user = await getUserFromRequest(req);
-  if (!user) {
+  try {
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      res.redirect("/admin-login.html");
+      return;
+    }
+    const isAdmin = await isAdminUser(user.id);
+    if (!isAdmin) {
+      res.redirect("/admin-login.html");
+      return;
+    }
+    next();
+  } catch (err) {
+    console.error("Admin asset guard error:", err);
     res.redirect("/admin-login.html");
-    return;
   }
-  const isAdmin = await isAdminUser(user.id);
-  if (!isAdmin) {
-    res.redirect("/admin-login.html");
-    return;
-  }
-  next();
 });
 
 app.use(express.static(frontendRoot, { extensions: ["html"] }));
@@ -103,6 +111,11 @@ function sanitizeFolder(value) {
   if (!value) return null;
   const cleaned = value.trim();
   if (!/^[a-zA-Z0-9_\-()]+$/.test(cleaned)) return null;
+  // Reject Windows reserved device names (case-insensitive). These pass the
+  // character check above but cannot be used as folder names on Windows hosts
+  // and can cause unexpected I/O behavior. (The regex already blocks "." / ".."
+  // and any path separators.)
+  if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(cleaned)) return null;
   return cleaned;
 }
 
@@ -591,13 +604,20 @@ async function isAdminUser(userId) {
 
 function requireAuth(handler) {
   return async (req, res) => {
-    const user = await getUserFromRequest(req);
-    if (!user) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
+    try {
+      const user = await getUserFromRequest(req);
+      if (!user) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+      req.user = user;
+      await handler(req, res);
+    } catch (err) {
+      console.error(`Unhandled error in ${req.method} ${req.originalUrl}:`, err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Something went wrong. Please try again." });
+      }
     }
-    req.user = user;
-    await handler(req, res);
   };
 }
 
@@ -610,6 +630,32 @@ function requireAdmin(handler) {
     }
     await handler(req, res);
   });
+}
+
+// Express-style middleware that authenticates and authorizes an admin BEFORE
+// downstream middleware runs. Placed ahead of Multer on upload routes so that
+// unauthenticated or non-admin requests are rejected before a large file is
+// buffered into memory.
+async function adminGate(req, res, next) {
+  try {
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    const ok = await isAdminUser(user.id);
+    if (!ok) {
+      res.status(403).json({ error: "Admin access required" });
+      return;
+    }
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error("adminGate error:", err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Something went wrong. Please try again." });
+    }
+  }
 }
 
 function toPlaylistDto(row) {
@@ -1898,9 +1944,24 @@ async function prepareApp() {
     });
   });
 
-  app.get("/api/admin/check", requireAdmin(async (req, res) => {
-    res.json({ ok: true });
-  }));
+  app.get("/api/admin/check", async (req, res) => {
+    try {
+      const user = await getUserFromRequest(req);
+      if (!user) {
+        res.json({ ok: true, authenticated: false, isAdmin: false });
+        return;
+      }
+
+      res.json({
+        ok: true,
+        authenticated: true,
+        isAdmin: await isAdminUser(user.id)
+      });
+    } catch (err) {
+      console.error("Admin status check failed:", err);
+      res.status(500).json({ error: "Unable to check admin status" });
+    }
+  });
 
   app.get("/api/admin/reports", requireAdmin(async (req, res) => {
     const [
@@ -1997,6 +2058,14 @@ async function prepareApp() {
     const allowedPlans = new Set(["free", "premium", "premium-monthly", "premium-yearly", "student"]);
     if (!Number.isInteger(id)) {
       res.status(400).json({ error: "Invalid user id" });
+      return;
+    }
+
+    // Prevent an admin from silently locking themselves out. Without this the
+    // self-demotion branch below is a no-op yet the request still reports
+    // success, which is misleading in the UI.
+    if (req.body?.isAdmin === false && id === req.user.id) {
+      res.status(400).json({ error: "You cannot remove your own admin access." });
       return;
     }
 
@@ -2204,6 +2273,7 @@ async function prepareApp() {
 
   app.post(
     "/api/admin/playlists",
+    adminGate,
     upload.single("cover"),
     requireAdmin(async (req, res) => {
       const { title, description, folder } = req.body || {};
@@ -2266,6 +2336,7 @@ async function prepareApp() {
 
   app.patch(
     "/api/admin/playlists/:id",
+    adminGate,
     upload.single("cover"),
     requireAdmin(async (req, res) => {
       const id = Number(req.params.id);
@@ -2359,6 +2430,7 @@ async function prepareApp() {
 
   app.post(
     "/api/admin/songs",
+    adminGate,
     upload.fields([
       { name: "audio", maxCount: 50 },
       { name: "cover", maxCount: 50 }
@@ -2457,6 +2529,7 @@ async function prepareApp() {
 
   app.patch(
     "/api/admin/songs/:id",
+    adminGate,
     upload.fields([
       { name: "cover", maxCount: 1 },
       { name: "audio", maxCount: 1 }
@@ -2649,6 +2722,21 @@ async function prepareApp() {
     await LikedSong.create({ userId: req.user.id, songId: id });
     res.json({ liked: true });
   }));
+
+  // Global fallback error handler. Must be registered AFTER all routes, and
+  // inside this IIFE so it lands after the route handlers above. Express
+  // recognizes it as error-handling middleware by its four arguments.
+  app.use((err, req, res, next) => {
+    console.error(`Unhandled error in ${req.method} ${req.originalUrl}:`, err);
+    if (res.headersSent) {
+      return next(err);
+    }
+    if (err && err.code === "LIMIT_FILE_SIZE") {
+      res.status(413).json({ error: "File too large. Maximum upload size is 100MB." });
+      return;
+    }
+    res.status(500).json({ error: "Something went wrong. Please try again." });
+  });
   })();
 
   return appReadyPromise;
@@ -2662,6 +2750,18 @@ async function start() {
     console.log(`Server running on ${PUBLIC_URL || localUrl}`);
   });
 }
+
+// Process-level safety nets. Most request paths now respond with a 500 via the
+// error middleware / requireAuth wrapper, but these prevent a stray rejection
+// or throw from an untended async path from taking the whole server down. We
+// log and keep running rather than exiting, so one bad request can't cause an
+// outage for everyone else.
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception:", err);
+});
 
 if (require.main === module) {
   start().catch((err) => {

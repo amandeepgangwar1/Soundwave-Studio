@@ -1,15 +1,17 @@
 async function requireSignedInUser() {
   const res = await fetch("/api/admin/check", { credentials: "include" });
-  if (res.status === 401) {
+  if (!res.ok) {
+    return false;
+  }
+  const data = await res.json();
+  if (!data.authenticated) {
     window.location.href = "/admin-login.html";
     return false;
   }
-  if (res.status === 403) {
-    // User is logged in but not an admin
+  if (!data.isAdmin) {
     window.location.href = "/home.html";
     return false;
   }
-  if (!res.ok) return false;
   return true;
 }
 
@@ -304,10 +306,12 @@ function renderSongAdminList(songs) {
   songs.forEach((song) => {
     const item = document.createElement("div");
     item.className = "list-item";
-    const artistOptions = cachedArtists
+    const artistMatched = cachedArtists.some((artist) => artist.id === song.artistId);
+    const artistOptions = `<option value="" ${artistMatched ? "" : "selected"}>— Unassigned —</option>` + cachedArtists
       .map((artist) => `<option value="${artist.id}" ${artist.id === song.artistId ? "selected" : ""}>${escapeHtml(artist.name)}</option>`)
       .join("");
-    const albumOptions = cachedAlbums
+    const albumMatched = cachedAlbums.some((album) => album.id === song.albumId);
+    const albumOptions = `<option value="" ${albumMatched ? "" : "selected"}>— Unassigned —</option>` + cachedAlbums
       .map((album) => `<option value="${album.id}" ${album.id === song.albumId ? "selected" : ""}>${escapeHtml(album.title)}</option>`)
       .join("");
     item.innerHTML = `

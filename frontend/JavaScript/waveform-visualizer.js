@@ -235,7 +235,7 @@ class WaveformVisualizer {
     // Connect audio source if not already connected
     if (!this.source) {
       try {
-        this.source = this.audioContext.createMediaElementAudioSource(
+        this.source = this.audioContext.createMediaElementSource(
           audioElement
         );
         this.source.connect(this.analyser);

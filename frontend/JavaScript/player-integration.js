@@ -199,7 +199,11 @@ function openImmersiveTheater(audioElement) {
     returnUrl: `${window.location.pathname}${window.location.search}`,
   };
 
-  sessionStorage.setItem("sw_current_audio", JSON.stringify(audioData));
+  try {
+    sessionStorage.setItem("sw_current_audio", JSON.stringify(audioData));
+  } catch (err) {
+    console.warn("Unable to store audio state for immersive theater", err);
+  }
 
   window.location.href = "immersive-theater.html?from=player";
 }

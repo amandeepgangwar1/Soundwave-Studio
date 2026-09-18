@@ -18,14 +18,14 @@
   const baseThemes = {
     "neon-rose": {
       name: "Soundwave",
-      description: "Dark glass with the Soundwave green accent",
-      primary: "#3ddc84",
-      secondary: "#55b7ff",
-      accent: "#a7f3c9",
-      background: "#0b0f14",
-      surface: "#121821",
-      text: "#f4f7fb",
-      muted: "#aeb8c5",
+      description: "Quiet charcoal surfaces with a focused lime accent",
+      primary: "#b8f36b",
+      secondary: "#b8f36b",
+      accent: "#e4ffc2",
+      background: "#090b0c",
+      surface: "#15191b",
+      text: "#f5f7f4",
+      muted: "#a4aca7",
       mode: "dark",
       buttonStyle: "pill",
       gradient: "subtle",
@@ -211,6 +211,10 @@
     }
   }
 
+  function isLegacyGreenTheme(theme) {
+    return ["#3ddc84", "#44df81"].includes(String(theme?.primary || "").toLowerCase());
+  }
+
   function hydrateTheme(theme) {
     const normalized = normalizeCustomTheme(theme);
     const primaryRgb = rgbString(normalized.primary);
@@ -374,6 +378,11 @@
       document.body.dataset.themeMode = theme.mode;
       document.body.dataset.themeName = key;
     }
+    if (theme.mode === "light") {
+      root.dataset.themeMode = "light";
+    } else {
+      delete root.dataset.themeMode;
+    }
     root.dataset.theaterTheme = key;
 
     window.dispatchEvent(
@@ -402,8 +411,9 @@
   function setMode(mode) {
     const targetMode = mode === "light" ? "light" : "dark";
     const activeTheme = getTheme(localStorage.getItem(STORAGE_THEME_KEY) || "neon-rose");
+    const palette = isLegacyGreenTheme(activeTheme) ? getTheme("neon-rose") : activeTheme;
     return saveCustomTheme({
-      ...activeTheme,
+      ...palette,
       mode: targetMode,
       background: targetMode === "light" ? "#f5f7fb" : "#0b0f14",
       surface: targetMode === "light" ? "#ffffff" : "#121821",
@@ -454,6 +464,21 @@
   function applyStoredTheme() {
     const storedTheme = localStorage.getItem(STORAGE_THEME_KEY);
     const legacyMode = localStorage.getItem("sw_theme");
+    const savedCustom = loadCustomTheme();
+    if (storedTheme === "custom" && savedCustom && isLegacyGreenTheme(savedCustom)) {
+      const targetMode = savedCustom.mode === "light" ? "light" : "dark";
+      liveCustomTheme = {
+        ...baseThemes["neon-rose"],
+        mode: targetMode,
+        background: targetMode === "light" ? "#f5f7fb" : baseThemes["neon-rose"].background,
+        surface: targetMode === "light" ? "#ffffff" : baseThemes["neon-rose"].surface,
+        text: targetMode === "light" ? "#121826" : baseThemes["neon-rose"].text,
+        muted: targetMode === "light" ? "#5f6b7a" : baseThemes["neon-rose"].muted,
+        cardAlpha: targetMode === "light" ? 0.92 : baseThemes["neon-rose"].cardAlpha,
+      };
+      applyTheme("custom");
+      return;
+    }
     if (!storedTheme && legacyMode === "light") {
       const lightTheme = {
         ...baseThemes["neon-rose"],

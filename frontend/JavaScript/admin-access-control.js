@@ -8,10 +8,12 @@
   // Check if user is admin
   async function isUserAdmin() {
     try {
-      const res = await fetch("/api/admin/check", { 
-        credentials: "include" 
+      const res = await fetch("/api/admin/check", {
+        credentials: "include"
       });
-      return res.ok && res.status === 200;
+      if (!res.ok) return false;
+      const data = await res.json();
+      return data.isAdmin === true;
     } catch (err) {
       console.error("Failed to check admin status:", err);
       return false;
@@ -23,12 +25,14 @@
     // Hide admin navigation link
     const adminNavLinks = document.querySelectorAll("a[href='admin.html']");
     adminNavLinks.forEach(link => {
+      if (link.closest(".global-page-nav")) return;
       link.style.display = "none";
     });
 
     // Hide admin navigation link with relative path
     const adminNavLinksRelative = document.querySelectorAll("a[href='../admin.html']");
     adminNavLinksRelative.forEach(link => {
+      if (link.closest(".global-page-nav")) return;
       link.style.display = "none";
     });
 
@@ -41,6 +45,7 @@
     // Hide admin buttons
     const adminButtons = document.querySelectorAll("a.button[href='admin.html'], a.button.ghost[href='admin.html']");
     adminButtons.forEach(btn => {
+      if (btn.closest(".global-page-nav")) return;
       btn.style.display = "none";
     });
 
@@ -48,7 +53,7 @@
     const allAdminLinks = document.querySelectorAll("[href*='admin.html']");
     allAdminLinks.forEach(link => {
       // Only hide if it's not the current page
-      if (!window.location.pathname.includes("admin.html")) {
+      if (!window.location.pathname.includes("admin.html") && !link.closest(".global-page-nav")) {
         link.style.display = "none";
       }
     });

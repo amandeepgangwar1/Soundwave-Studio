@@ -1,0 +1,1492 @@
+/* =============================================================================
+   Soundwave Studio — Spotify-style dark redesign
+   Loaded LAST on every page, so equal-specificity rules win the cascade.
+   Strategy: (1) retune the design tokens app.css already consumes at each
+   scope that redeclares them (:root, body.studio-page, body.landing-page,
+   .premium-player, light mode), then (2) a focused component-polish layer.
+   All existing class names and JS hooks are preserved.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. CORE TOKENS — global dark baseline (covers player.html + sections/*,
+      which carry no body scope class and therefore read from :root)
+   ----------------------------------------------------------------------------- */
+:root {
+  --bg: #0a0a0a;
+  --bg-soft: #181818;
+  --panel: #181818;
+
+  --accent: #1ed760;
+  --accent-dark: #1db954;
+  --secondary-accent: #1db954;
+  --accent-rgb: 30, 215, 96;
+  --secondary-rgb: 29, 185, 84;
+
+  --text: #ffffff;
+  --muted: #b3b3b3;
+  --page-text: #ffffff;
+  --page-muted: #b3b3b3;
+  --panel-text: #ffffff;
+  --panel-muted: #b3b3b3;
+
+  --list-bg: transparent;
+  --list-text: #ffffff;
+  --list-muted: #b3b3b3;
+  --list-border: rgba(255, 255, 255, 0.08);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --input-bg: #2a2a2a;
+  --input-text: #ffffff;
+  --input-placeholder: #a7a7a7;
+
+  --nav-text: #ffffff;
+  --nav-muted: #b3b3b3;
+
+  --border: rgba(255, 255, 255, 0.10);
+  --danger: #f0616d;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  --app-bg-gradient:
+    radial-gradient(1100px 460px at 50% -160px, rgba(30, 215, 96, 0.10), transparent 60%),
+    linear-gradient(180deg, #1c1c1c 0, #121212 280px, #0a0a0a 100%);
+  --theme-gradient: linear-gradient(135deg, var(--accent), var(--secondary-accent));
+
+  --card-alpha: 1;
+  --glow-strength: 0.28;
+  --radius: 10px;
+  --button-radius: 999px;
+  --button-bg: var(--accent);
+  --button-text: #05100a;
+  --button-border: 1px solid transparent;
+}
+
+/* Base backgrounds. html stays pure black so any gap reads as intentional. */
+html {
+  background: #0a0a0a;
+}
+
+body {
+  background: var(--app-bg-gradient);
+  background-attachment: fixed;
+  color: var(--text);
+}
+
+/* -----------------------------------------------------------------------------
+   2. STUDIO SCOPE — every app + auth page (home, search, library, playlist,
+      artists, premium, admin, browse, shared-playlist, login, signup, admin-*)
+      app.css re-declares violet tokens here at (0,1,1); we match + win.
+   ----------------------------------------------------------------------------- */
+body.studio-page {
+  --bg: #0a0a0a;
+  --panel: #181818;
+  --border: rgba(255, 255, 255, 0.10);
+  --list-bg: transparent;
+  --list-border: rgba(255, 255, 255, 0.08);
+  --input-bg: #2a2a2a;
+  --input-placeholder: #a7a7a7;
+  --muted: #b3b3b3;
+  --page-muted: #b3b3b3;
+  --panel-muted: #b3b3b3;
+  --nav-muted: #b3b3b3;
+  --accent: #1ed760;
+  --accent-dark: #1db954;
+  --accent-rgb: 30, 215, 96;
+  --secondary-accent: #1db954;
+  --secondary-rgb: 29, 185, 84;
+  --button-bg: var(--accent);
+  --button-text: #05100a;
+  --button-radius: 999px;
+  --radius: 10px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  font-size: 13px;
+  background:
+    radial-gradient(1100px 460px at 50% -160px, rgba(30, 215, 96, 0.09), transparent 62%),
+    linear-gradient(180deg, #1a1a1a 0, #121212 280px, #0a0a0a 100%);
+  background-attachment: fixed;
+}
+
+/* -----------------------------------------------------------------------------
+   3. LANDING SCOPE — index.html
+   ----------------------------------------------------------------------------- */
+body.landing-page {
+  --landing-surface: rgba(24, 24, 24, 0.88);
+  --landing-border: rgba(255, 255, 255, 0.10);
+  --landing-green: #1ed760;
+  --landing-muted: #b3b3b3;
+  --accent: #1ed760;
+  --accent-dark: #1db954;
+  --accent-rgb: 30, 215, 96;
+  --secondary-rgb: 29, 185, 84;
+  color: #ffffff;
+  background:
+    radial-gradient(1200px 560px at 50% -180px, rgba(30, 215, 96, 0.14), transparent 60%),
+    radial-gradient(900px 500px at 85% 8%, rgba(29, 185, 84, 0.10), transparent 55%),
+    linear-gradient(180deg, #1a1a1a 0, #101010 55%, #0a0a0a 100%);
+  background-attachment: fixed;
+}
+
+/* -----------------------------------------------------------------------------
+   4. LIGHT MODE — coherent light palette with the same green accent
+   ----------------------------------------------------------------------------- */
+body.theme-light,
+html[data-theme-mode="light"] body {
+  --bg: #f7f8fa;
+  --bg-soft: #ffffff;
+  --panel: #ffffff;
+  --accent: #1db954;
+  --accent-dark: #189945;
+  --accent-rgb: 29, 185, 84;
+  --secondary-accent: #1ed760;
+  --secondary-rgb: 30, 215, 96;
+  --text: #0d1117;
+  --muted: #5b6470;
+  --page-text: #0d1117;
+  --page-muted: #5b6470;
+  --panel-text: #0d1117;
+  --panel-muted: #5b6470;
+  --list-bg: transparent;
+  --list-text: #0d1117;
+  --list-muted: #5b6470;
+  --list-border: rgba(0, 0, 0, 0.10);
+  --list-hover-bg: rgba(0, 0, 0, 0.05);
+  --input-bg: #eef1f5;
+  --input-text: #0d1117;
+  --input-placeholder: #7a828d;
+  --nav-text: #0d1117;
+  --nav-muted: #5b6470;
+  --border: rgba(0, 0, 0, 0.12);
+  --button-text: #05100a;
+  --shadow: 0 8px 24px rgba(16, 24, 40, 0.10);
+  background: radial-gradient(circle at top, #ffffff, #eef1f5 60%);
+}
+
+html[data-theme-mode="light"] body.studio-page,
+body.studio-page.theme-light {
+  --bg: #f7f8fa;
+  --panel: #ffffff;
+  --muted: #5b6470;
+  --page-muted: #5b6470;
+  --panel-muted: #5b6470;
+  --nav-muted: #5b6470;
+  --input-bg: #eef1f5;
+  --input-placeholder: #7a828d;
+  --border: rgba(0, 0, 0, 0.12);
+  --accent: #1db954;
+  --accent-rgb: 29, 185, 84;
+  --button-bg: var(--accent);
+  --list-hover-bg: rgba(0, 0, 0, 0.05);
+  background: radial-gradient(circle at top, #ffffff, #eef1f5 62%);
+}
+
+html[data-theme-mode="light"] .list-item,
+body.theme-light .list-item {
+  background: transparent;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme-mode="light"] .list-item:hover,
+body.theme-light .list-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* -----------------------------------------------------------------------------
+   5. GLOBAL PRIMITIVES
+   ----------------------------------------------------------------------------- */
+::selection {
+  background: rgba(30, 215, 96, 0.30);
+  color: #ffffff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Thin, Spotify-like scrollbars (pages that opt out via scrollbar-width:none win). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4d4d4d transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #4d4d4d;
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #7a7a7a;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+/* -----------------------------------------------------------------------------
+   6. TOP BAR + NAV
+   ----------------------------------------------------------------------------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(10, 10, 10, 0.72);
+  -webkit-backdrop-filter: saturate(140%) blur(14px);
+  backdrop-filter: saturate(140%) blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 12px 18px;
+}
+
+html[data-theme-mode="light"] .topbar,
+body.theme-light .topbar {
+  background: rgba(255, 255, 255, 0.78);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+.logo {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.nav {
+  gap: 6px;
+  align-items: center;
+}
+
+.nav a {
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: var(--nav-muted);
+  font-weight: 600;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.nav a:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav a.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+html[data-theme-mode="light"] .nav a:hover,
+body.theme-light .nav a:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme-mode="light"] .nav a.active,
+body.theme-light .nav a.active {
+  color: #0d1117;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Wizard prev/next + logout chips injected by navigation.js */
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.10);
+  transform: translateY(-1px);
+}
+
+.nav-btn.disabled,
+.nav-btn[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* -----------------------------------------------------------------------------
+   7. BUTTONS
+   ----------------------------------------------------------------------------- */
+.button {
+  background: var(--accent);
+  color: var(--button-text);
+  border: 1px solid transparent;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  box-shadow: none;
+  transition: transform 0.12s ease, background 0.15s ease, filter 0.15s ease;
+}
+
+.button:hover {
+  background: var(--accent);
+  filter: none;
+  transform: scale(1.035);
+}
+
+.button:active {
+  transform: scale(0.99);
+}
+
+.button.ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  font-weight: 600;
+}
+
+.button.ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.55);
+  transform: scale(1.02);
+}
+
+html[data-theme-mode="light"] .button.ghost,
+body.theme-light .button.ghost {
+  border-color: rgba(0, 0, 0, 0.22);
+}
+
+html[data-theme-mode="light"] .button.ghost:hover,
+body.theme-light .button.ghost:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.45);
+}
+
+.button.small,
+.button.ghost.small {
+  min-height: 34px;
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+.button.full {
+  width: 100%;
+}
+
+/* -----------------------------------------------------------------------------
+   8. PANELS + SECTION TITLES
+   ----------------------------------------------------------------------------- */
+.panel {
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+}
+
+html[data-theme-mode="light"] .panel,
+body.theme-light .panel {
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.08);
+}
+
+.section-title {
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* -----------------------------------------------------------------------------
+   9. CARDS (playlist / artist / album tiles)
+   ----------------------------------------------------------------------------- */
+.grid {
+  gap: 22px;
+}
+
+.card {
+  background: #181818;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 14px;
+  gap: 12px;
+  box-shadow: none;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  background: #282828;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+}
+
+.card img {
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.card-desc {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+html[data-theme-mode="light"] .card,
+body.theme-light .card {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.08);
+}
+
+html[data-theme-mode="light"] .card:hover,
+body.theme-light .card:hover {
+  background: #ffffff;
+  box-shadow: 0 14px 30px rgba(16, 24, 40, 0.16);
+}
+
+/* -----------------------------------------------------------------------------
+   10. LIST ROWS (track rows, admin rows, queue-style lists)
+   ----------------------------------------------------------------------------- */
+.list {
+  gap: 2px;
+}
+
+.list-item {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 9px 12px;
+  transition: background 0.15s ease;
+}
+
+.list-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: transparent;
+}
+
+.list-item > span:first-child {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.list-item .muted,
+.list-item small,
+.list-item span + span {
+  color: var(--muted);
+}
+
+/* -----------------------------------------------------------------------------
+   11. INPUTS, SEARCH FIELDS, FORMS, DROPZONES
+   ----------------------------------------------------------------------------- */
+.search-panel {
+  background: #242424;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 10px 18px;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-panel:focus-within {
+  background: #2a2a2a;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.flush-panel {
+  box-shadow: none;
+}
+
+.search-panel input {
+  color: var(--text);
+  font-weight: 500;
+}
+
+html[data-theme-mode="light"] .search-panel,
+body.theme-light .search-panel {
+  background: #eef1f5;
+}
+
+.form input,
+.form select,
+.form textarea,
+input,
+select,
+textarea {
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+  color: var(--text);
+}
+
+.form input:focus,
+.form select:focus,
+.form textarea:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(30, 215, 96, 0.25);
+}
+
+html[data-theme-mode="light"] .form input,
+html[data-theme-mode="light"] .form select,
+html[data-theme-mode="light"] input,
+html[data-theme-mode="light"] select,
+body.theme-light .form input,
+body.theme-light .form select {
+  background: #eef1f5;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.dropzone {
+  background: #1f1f1f;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  color: var(--muted);
+}
+
+.dropzone:hover,
+.dropzone.dragover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: rgba(30, 215, 96, 0.08);
+}
+
+.progress {
+  background: rgba(255, 255, 255, 0.10);
+  border: none;
+}
+
+.progress-bar {
+  background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+}
+
+/* -----------------------------------------------------------------------------
+   12. PILL TABS / CHIPS / TAGS
+   ----------------------------------------------------------------------------- */
+.pill-btn {
+  background: #232323;
+  border: 1px solid transparent;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.pill-btn:hover {
+  background: #2e2e2e;
+  border-color: transparent;
+  transform: none;
+}
+
+.pill-btn.active {
+  background: var(--accent);
+  color: #05100a;
+  border-color: transparent;
+}
+
+.tag {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid transparent;
+  color: var(--muted);
+}
+
+html[data-theme-mode="light"] .pill-btn,
+body.theme-light .pill-btn {
+  background: #e7eaef;
+}
+
+html[data-theme-mode="light"] .pill-btn.active,
+body.theme-light .pill-btn.active {
+  color: #05100a;
+}
+
+/* -----------------------------------------------------------------------------
+   13. AUTH SCREENS (login / signup / admin auth)
+   ----------------------------------------------------------------------------- */
+.auth-page .hero {
+  background:
+    radial-gradient(700px 320px at 15% 0%, rgba(30, 215, 96, 0.14), transparent 60%),
+    var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.auth-page .hero h1 {
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.auth-form input {
+  min-height: 44px;
+}
+
+.social-auth {
+  display: grid;
+  gap: 10px;
+}
+
+.helper {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.helper a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 13px;
+  min-height: 0;
+}
+
+.auth-mobile-nav a.active {
+  color: var(--accent);
+}
+
+/* -----------------------------------------------------------------------------
+   14. PREMIUM / PLAN CARDS
+   ----------------------------------------------------------------------------- */
+.plan-grid {
+  gap: 20px;
+}
+
+.plan-card {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.plan-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.20);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.plan-card[data-plan="yearly"],
+.plan-card.active-plan {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 16px 44px rgba(30, 215, 96, 0.14);
+}
+
+.plan-card .price {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 6px 0 14px;
+}
+
+.plan-card .price small {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.plan-card .mini-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.plan-card .mini-list > div {
+  position: relative;
+  padding-left: 24px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.plan-card .mini-list > div::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background:
+    var(--accent)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2305100a' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E")
+    center / 11px no-repeat;
+}
+
+.popular-plan {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--accent);
+  color: #05100a;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.current-plan {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(30, 215, 96, 0.14);
+  color: var(--accent);
+  border: 1px solid rgba(30, 215, 96, 0.35);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Payment-history rows injected by premium.js (container added to premium.html) */
+#paymentHistory {
+  display: grid;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+/* -----------------------------------------------------------------------------
+   15. LIBRARY ROWS (collapsible details)
+   ----------------------------------------------------------------------------- */
+.library-row {
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.library-row + .library-row {
+  margin-top: 12px;
+}
+
+.library-row summary {
+  cursor: pointer;
+  padding: 16px 18px;
+  transition: background 0.15s ease;
+}
+
+.library-row summary:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.library-row[open] summary {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.library-label strong {
+  color: var(--text);
+}
+
+.library-label small {
+  color: var(--muted);
+}
+
+/* -----------------------------------------------------------------------------
+   16. ADMIN CONSOLE
+   ----------------------------------------------------------------------------- */
+.admin-tabs {
+  flex-wrap: wrap;
+}
+
+.admin-tabs .tab-btn.active {
+  background: var(--accent);
+  color: #05100a;
+  border-color: transparent;
+}
+
+.artist-card {
+  background: #1f1f1f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.artist-card:hover {
+  border-color: var(--accent);
+}
+
+.admin-user-header,
+.admin-song-edit {
+  color: var(--text);
+}
+
+.admin-user-status {
+  color: var(--muted);
+}
+
+.inline-check {
+  color: var(--muted);
+}
+
+.stat-card {
+  background: #1f1f1f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.stat-value {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.stat-label {
+  color: var(--muted);
+}
+
+/* -----------------------------------------------------------------------------
+   18. FINAL PRODUCT POLISH — quiet surfaces, clear hierarchy, one accent
+   ----------------------------------------------------------------------------- */
+:root {
+  --accent: #b8f36b;
+  --accent-dark: #9bd64f;
+  --secondary-accent: #b8f36b;
+  --accent-rgb: 184, 243, 107;
+  --secondary-rgb: 184, 243, 107;
+  --bg: #090b0c;
+  --bg-soft: #111416;
+  --panel: #15191b;
+  --text: #f5f7f4;
+  --muted: #a4aca7;
+  --border: rgba(255, 255, 255, 0.11);
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+  --theme-gradient: linear-gradient(135deg, var(--accent), var(--accent));
+  --radius: 10px;
+  --font-family: "Poppins", "Segoe UI", sans-serif;
+}
+
+body,
+body.studio-page {
+  --accent: #b8f36b;
+  --accent-dark: #9bd64f;
+  --secondary-accent: #b8f36b;
+  --accent-rgb: 184, 243, 107;
+  --secondary-rgb: 184, 243, 107;
+  --bg: #090b0c;
+  --bg-soft: #111416;
+  --panel: #15191b;
+  --text: #f5f7f4;
+  --muted: #a4aca7;
+  --border: rgba(255, 255, 255, 0.11);
+  --button-bg: var(--accent);
+  --button-text: #11150d;
+  background:
+    radial-gradient(900px 360px at 50% -180px, rgba(184, 243, 107, 0.08), transparent 68%),
+    #090b0c;
+  color: var(--text);
+}
+
+.shell {
+  max-width: 1180px;
+  padding: 24px 28px 56px;
+}
+
+.topbar {
+  min-height: 56px;
+  margin-bottom: 34px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logo {
+  gap: 10px;
+  letter-spacing: 0;
+}
+
+.logo img {
+  width: 36px;
+  height: 36px;
+}
+
+.nav {
+  gap: 22px;
+  font-size: 12px;
+}
+
+.nav a {
+  position: relative;
+  color: var(--muted);
+  transition: color 0.18s ease;
+}
+
+.nav a:hover,
+.nav a.active {
+  color: var(--text);
+}
+
+.nav a.active::after {
+  position: absolute;
+  right: 0;
+  bottom: 5px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  content: "";
+}
+
+.panel,
+.card,
+.artist-card,
+.plan-card,
+.library-row,
+.stat-card {
+  border-color: var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.panel {
+  padding: 24px;
+}
+
+.page-heading {
+  margin-bottom: 22px;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.page-heading .section-title {
+  font-size: 24px;
+  letter-spacing: -0.4px;
+}
+
+.page-heading p {
+  margin: 5px 0 0;
+  font-size: 13px;
+}
+
+.button {
+  min-height: 40px;
+  border-radius: 8px;
+  box-shadow: none;
+  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+.button:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}
+
+.button.ghost,
+.nav-btn {
+  border-color: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+}
+
+.button.ghost:hover,
+.nav-btn:hover {
+  border-color: rgba(184, 243, 107, 0.55);
+  background: rgba(184, 243, 107, 0.08);
+}
+
+.card {
+  background: #15191b;
+  padding: 12px;
+}
+
+.card:hover {
+  background: #1b2022;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
+}
+
+.list-item {
+  min-height: 44px;
+  border-radius: 7px;
+  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.list-item:hover {
+  background: rgba(184, 243, 107, 0.07);
+  border-color: rgba(184, 243, 107, 0.22);
+}
+
+.search-panel {
+  background: #111416;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.search-panel:focus-within {
+  background: #151a1c;
+  box-shadow: 0 0 0 2px rgba(184, 243, 107, 0.28);
+}
+
+.pill-btn {
+  min-height: 36px;
+  border-radius: 8px;
+  background: #1a1f21;
+  border-color: var(--border);
+}
+
+.pill-btn:hover {
+  background: #22282a;
+}
+
+.pill-btn.active {
+  background: var(--accent);
+  color: #11150d;
+}
+
+.footer {
+  margin-top: 12px;
+  padding: 22px 28px 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 12px;
+}
+
+@media (max-width: 720px) {
+  .shell {
+    padding: 16px 16px 40px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .nav {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+    overflow-x: auto;
+  }
+
+  .nav a {
+    flex: 0 0 auto;
+    font-size: 11px;
+  }
+
+  .nav a.active::after {
+    bottom: 1px;
+  }
+
+  .panel {
+    padding: 18px;
+  }
+
+  .page-heading .section-title {
+    font-size: 21px;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   17. PLAYER (recolor only — layout is intentionally left untouched)
+   ----------------------------------------------------------------------------- */
+.premium-player {
+  --player-glass: rgba(24, 24, 24, 0.72);
+  --player-glass-strong: rgba(16, 16, 16, 0.88);
+  --player-border: rgba(255, 255, 255, 0.08);
+  --player-border-hot: rgba(30, 215, 96, 0.75);
+  --player-shadow: 0 28px 72px rgba(0, 0, 0, 0.55);
+  --player-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Play control gets the signature green treatment */
+#playBtn {
+  background: var(--accent);
+  color: #05100a;
+  border-color: transparent;
+}
+
+#playBtn:hover {
+  transform: scale(1.06);
+  filter: brightness(1.05);
+}
+
+/* Range / seek / volume fills */
+#seekRange,
+#volumeRange,
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+/* Mobile mini-player */
+.mobile-mini-player {
+  background: rgba(20, 20, 20, 0.96);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#miniPlayBtn {
+  background: var(--accent);
+  color: #05100a;
+}
+
+/* Side links (player sidebar) */
+.side-link {
+  border-radius: 8px;
+  color: var(--muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.side-link:hover,
+.side-link.active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* -----------------------------------------------------------------------------
+   18. FOOTER
+   ----------------------------------------------------------------------------- */
+.footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  margin-top: 48px;
+}
+
+html[data-theme-mode="light"] .footer,
+body.theme-light .footer {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+/* -----------------------------------------------------------------------------
+   19. AUTH OVERLAY (post-login transition)
+   ----------------------------------------------------------------------------- */
+.auth-overlay {
+  background: rgba(10, 10, 10, 0.86);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: var(--text);
+}
+
+/* -----------------------------------------------------------------------------
+   20. RESPONSIVE NUDGES
+   ----------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+  .topbar {
+    position: static;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .grid {
+    gap: 16px;
+  }
+
+  .plan-card .price {
+    font-size: 28px;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   21. AUTH INLINE ERROR + SIGNUP HINT
+   ----------------------------------------------------------------------------- */
+.auth-error-hint {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.auth-error-hint a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth-error-hint a:hover {
+  text-decoration: underline;
+}
+
+/* -----------------------------------------------------------------------------
+   22. WORKFLOW POLISH
+   ----------------------------------------------------------------------------- */
+.page-premium .plan-grid {
+  align-items: stretch;
+  gap: 16px;
+}
+
+.page-premium .plan-card {
+  display: flex;
+  min-height: 350px;
+  flex-direction: column;
+}
+
+.page-premium .plan-card .button {
+  margin-top: auto;
+}
+
+.page-premium .plan-card[data-plan="yearly"],
+.page-premium .plan-card.active-plan {
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow);
+}
+
+.page-premium .popular-plan {
+  top: 14px;
+  right: 14px;
+  padding: 4px 8px;
+  font-size: 10px;
+}
+
+.page-premium .compact-payment .payment-form {
+  align-items: end;
+  gap: 16px;
+}
+
+.page-library .library-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.page-library .library-row + .library-row {
+  margin-top: 0;
+}
+
+.page-library .library-row summary {
+  padding: 14px 16px;
+}
+
+.page-library .library-row[open] {
+  border-color: rgba(184, 243, 107, 0.28);
+}
+
+.page-artists .split-layout {
+  gap: 20px;
+}
+
+.page-artists #artistGrid {
+  gap: 14px;
+}
+
+.page-artists .artist-card {
+  overflow: hidden;
+  background: #15191b;
+}
+
+.page-artists .artist-card-image {
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.page-artists .detail-panel {
+  position: sticky;
+  top: 20px;
+  align-self: start;
+}
+
+/* Landing header: navigation.js adds step controls and the theme toggle as
+   siblings, so give each header group an explicit column. */
+.landing-page .landing-topbar {
+  display: grid;
+  grid-template-columns: auto minmax(240px, 1fr) auto auto;
+  align-items: center;
+  gap: 22px;
+  min-height: 64px;
+  margin-bottom: 34px;
+  padding: 8px 0 18px;
+}
+
+.landing-page .landing-topbar .global-page-nav {
+  grid-column: 1;
+  justify-self: start;
+  width: auto;
+}
+
+.landing-page .landing-logo {
+  grid-column: 2;
+  justify-self: center;
+  white-space: nowrap;
+}
+
+.landing-page .landing-nav {
+  grid-column: 3;
+  justify-self: end;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.landing-page .landing-nav a {
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+
+.landing-page .landing-nav .landing-signup {
+  min-width: 92px;
+  text-align: center;
+}
+
+.landing-page .theme-toggle-control {
+  grid-column: 4;
+  justify-self: end;
+  min-width: 112px;
+  white-space: nowrap;
+}
+
+.page-search .search-workspace {
+  padding: 20px;
+}
+
+.page-search .tab-strip {
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.page-search .result-section > .section-title {
+  margin: 24px 0 10px;
+  font-size: 15px;
+}
+
+.player-page .topbar {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+
+.player-page .global-page-nav {
+  grid-column: 1;
+}
+
+.player-page .logo {
+  grid-column: 2;
+  white-space: nowrap;
+}
+
+.player-page .nav {
+  grid-column: 3;
+  justify-content: center;
+}
+
+.player-page .actions-end {
+  grid-column: 4;
+  justify-content: flex-end;
+}
+
+.player-page .actions-end .theme-toggle-control {
+  white-space: nowrap;
+}
+
+.premium-player {
+  --player-border-hot: rgba(184, 243, 107, 0.55);
+  --player-shadow: 0 18px 44px rgba(0, 0, 0, 0.32);
+  border-radius: 12px;
+}
+
+.premium-player .pulse-ring {
+  opacity: 0.45;
+}
+
+.premium-player .vinyl-disc {
+  opacity: 0.8;
+}
+
+.premium-player .player-controls .icon-btn {
+  border-radius: 8px;
+}
+
+@media (max-width: 900px) {
+  .landing-page .landing-topbar {
+    grid-template-columns: auto minmax(180px, 1fr) auto auto;
+    gap: 12px;
+  }
+
+  .landing-page .landing-logo {
+    justify-self: start;
+  }
+
+  .landing-page .landing-nav {
+    gap: 4px;
+  }
+
+  .landing-page .landing-nav a {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .landing-page .theme-toggle-control {
+    min-width: 96px;
+  }
+
+  .page-artists .detail-panel {
+    position: static;
+  }
+
+  .page-premium .plan-card {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .landing-page .landing-topbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "steps theme"
+      "logo logo"
+      "nav nav";
+    gap: 14px;
+    min-height: 0;
+    padding: 0 0 14px;
+  }
+
+  .landing-page .landing-topbar .global-page-nav {
+    grid-area: steps;
+  }
+
+  .landing-page .landing-logo {
+    grid-area: logo;
+    justify-self: start;
+  }
+
+  .landing-page .landing-nav {
+    grid-area: nav;
+    justify-self: stretch;
+  }
+
+  .landing-page .theme-toggle-control {
+    grid-area: theme;
+    justify-self: end;
+    min-width: 0;
+  }
+
+  .player-page .topbar {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .player-page .global-page-nav {
+    order: 1;
+    width: auto;
+  }
+
+  .player-page .logo {
+    order: 2;
+    flex: 1;
+  }
+
+  .player-page .actions-end {
+    order: 3;
+  }
+
+  .player-page .nav {
+    order: 4;
+  }
+
+  .page-premium .compact-payment .payment-form {
+    align-items: stretch;
+  }
+
+  .page-search .search-workspace {
+    padding: 16px;
+  }
+
+  .page-search .tab-strip {
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+}

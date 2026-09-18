@@ -30,7 +30,7 @@ function escapeHtml(value) {
 async function requireAuth() {
   const res = await fetch("/api/me", { credentials: "include" });
   if (!res.ok) {
-    window.location.href = "/login.html";
+    window.location.href = window.SoundwaveAuthRedirect?.getLoginUrl() || "/login.html";
     return null;
   }
   return res.json();
@@ -132,29 +132,41 @@ async function renderDiscoveryRows() {
   const trending = document.getElementById("trendingSongs");
   const releases = document.getElementById("newReleases");
   if (!trending || !releases) return;
-  const res = await fetch("/api/search?limit=8", { credentials: "include" });
-  if (!res.ok) return;
-  const data = await res.json();
-  const songs = data.songs || [];
-  trending.innerHTML = songs
-    .slice(0, 4)
-    .map((song) => `
-      <div class="list-item">
-        <span>${escapeHtml(song.title)}</span>
-        <a class="button ghost" href="player.html?playlist=${song.playlistId}&song=${song.id}">Play</a>
-      </div>
-    `)
-    .join("") || '<div class="list-item"><span>No songs yet.</span></div>';
-  releases.innerHTML = songs
-    .slice(-4)
-    .reverse()
-    .map((song) => `
-      <div class="list-item">
-        <span>${escapeHtml(song.albumTitle || song.playlistTitle)}</span>
-        <span class="muted">${escapeHtml(song.artistName)}</span>
-      </div>
-    `)
-    .join("") || '<div class="list-item"><span>No releases yet.</span></div>';
+  const showPlaceholder = () => {
+    trending.innerHTML = '<div class="list-item"><span>Unable to load trending songs right now.</span></div>';
+    releases.innerHTML = '<div class="list-item"><span>Unable to load new releases right now.</span></div>';
+  };
+  try {
+    const res = await fetch("/api/search?limit=8", { credentials: "include" });
+    if (!res.ok) {
+      showPlaceholder();
+      return;
+    }
+    const data = await res.json();
+    const songs = data.songs || [];
+    trending.innerHTML = songs
+      .slice(0, 4)
+      .map((song) => `
+        <div class="list-item">
+          <span>${escapeHtml(song.title)}</span>
+          <a class="button ghost" href="player.html?playlist=${song.playlistId}&song=${song.id}">Play</a>
+        </div>
+      `)
+      .join("") || '<div class="list-item"><span>No songs yet.</span></div>';
+    releases.innerHTML = songs
+      .slice(-4)
+      .reverse()
+      .map((song) => `
+        <div class="list-item">
+          <span>${escapeHtml(song.albumTitle || song.playlistTitle)}</span>
+          <span class="muted">${escapeHtml(song.artistName)}</span>
+        </div>
+      `)
+      .join("") || '<div class="list-item"><span>No releases yet.</span></div>';
+  } catch (err) {
+    console.warn("Failed to load discovery rows", err);
+    showPlaceholder();
+  }
 }
 
 

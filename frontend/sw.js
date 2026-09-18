@@ -3,7 +3,7 @@
  * Handles offline caching with proper 206 partial content handling
  */
 
-const CACHE_NAME = "soundwave-v2.8";
+const CACHE_NAME = "soundwave-v2.9";
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 const IS_LOCAL_DEV = LOCAL_HOSTS.has(self.location.hostname);
 const CACHE_URLS = [
@@ -20,6 +20,9 @@ const CACHE_URLS = [
   "/Cascading Style Sheets/utility.css",
   "/Cascading Style Sheets/immersive-theater.css",
   "/JavaScript/navigation.js",
+  "/JavaScript/auth-redirect.js",
+  "/JavaScript/listener-shell.js",
+  "/JavaScript/theme-preload.js",
   "/JavaScript/transition.js",
   "/JavaScript/player.js",
   "/JavaScript/auth.js",

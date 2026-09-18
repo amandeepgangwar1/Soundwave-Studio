@@ -10,7 +10,7 @@
 async function requireAuth() {
   const res = await fetch("/api/me", { credentials: "include" });
   if (!res.ok) {
-    window.location.href = "/login.html";
+    window.location.href = window.SoundwaveAuthRedirect?.getLoginUrl() || "/login.html";
     return null;
   }
   return res.json();
@@ -38,7 +38,14 @@ function getJSON(key, fallback) {
 }
 
 function setJSON(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    // localStorage can throw in private mode or when the quota is exceeded.
+    // Persistence is best-effort here, so swallow the error rather than
+    // letting it break playback/like handling.
+    console.warn("Unable to persist", key, err);
+  }
 }
 
 function parseSongMeta(filename) {
@@ -103,7 +110,22 @@ async function init() {
     playlist = await loadPlaylist(playlistId);
   }
 
-    const songs = playlist?.songs || [];
+  if (!playlist) {
+    try {
+      const playlistsRes = await fetch("/api/playlists", { credentials: "include" });
+      if (playlistsRes.ok) {
+        const playlists = await playlistsRes.json();
+        const firstPlaylist = playlists[0];
+        if (firstPlaylist?.id) {
+          playlist = await loadPlaylist(firstPlaylist.id);
+        }
+      }
+    } catch (err) {
+      playlist = null;
+    }
+  }
+
+  const songs = playlist?.songs || [];
   let index = songs.findIndex((s) => s.id === songId);
   const songParam = Number.isNaN(songId) ? (new URLSearchParams(window.location.search).get("song") || "") : "";
   const fileName = file || songParam;
@@ -490,7 +512,8 @@ async function init() {
     }
 
     libraryList.innerHTML = filtered
-      .map((song, idx) => {
+      .map((song) => {
+        const realIndex = songs.indexOf(song);
         const fallback = parseSongMeta(song.filename);
         const metaInfo = {
           title: song.title || fallback.title,
@@ -503,8 +526,8 @@ async function init() {
           <div class="list-item">
             <span>${metaInfo.title}</span>
             <span class="muted">${metaInfo.artist}</span>
-            <button class="pill-btn ${liked ? "active" : ""}" data-action="like" data-index="${idx}">${liked ? "Liked" : "Like"}</button>
-            <button class="pill-btn" data-action="play" data-index="${idx}">Play</button>
+            <button class="pill-btn ${liked ? "active" : ""}" data-action="like" data-index="${realIndex}">${liked ? "Liked" : "Like"}</button>
+            <button class="pill-btn" data-action="play" data-index="${realIndex}">Play</button>
           </div>
         `;
       })

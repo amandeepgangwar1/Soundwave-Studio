@@ -1,7 +1,7 @@
 async function requireAuth() {
   const res = await fetch("/api/me", { credentials: "include" });
   if (!res.ok) {
-    window.location.href = "/login.html";
+    window.location.href = window.SoundwaveAuthRedirect?.getLoginUrl() || "/login.html";
     return null;
   }
   return res.json();

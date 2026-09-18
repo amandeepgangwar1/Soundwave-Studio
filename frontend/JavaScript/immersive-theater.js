@@ -1244,16 +1244,20 @@ class ImmersiveTheater {
 
   exitTheater() {
     this.waveformVisualizer?.destroy();
-    sessionStorage.setItem(
-      "sw_theater_return",
-      JSON.stringify({
-        currentIndex: this.currentIndex,
-        currentTime: this.audioElement?.currentTime || 0,
-        autoPlay: Boolean(this.audioElement && !this.audioElement.paused),
-        volume: this.audioElement?.volume ?? 0.8,
-        muted: Boolean(this.audioElement?.muted),
-      })
-    );
+    try {
+      sessionStorage.setItem(
+        "sw_theater_return",
+        JSON.stringify({
+          currentIndex: this.currentIndex,
+          currentTime: this.audioElement?.currentTime || 0,
+          autoPlay: Boolean(this.audioElement && !this.audioElement.paused),
+          volume: this.audioElement?.volume ?? 0.8,
+          muted: Boolean(this.audioElement?.muted),
+        })
+      );
+    } catch (err) {
+      console.warn("Unable to persist theater return state", err);
+    }
     window.location.href = this.returnUrl || "player.html";
   }
 }
@@ -1268,11 +1272,20 @@ window.addEventListener("DOMContentLoaded", () => {
   window.immersiveTheater = new ImmersiveTheater(audioElement);
 
   const urlParams = new URLSearchParams(window.location.search);
+  if (!urlParams.has("from")) {
+    window.location.href = "player.html";
+    return;
+  }
+
   if (urlParams.get("from") === "player") {
     const audioData = sessionStorage.getItem("sw_current_audio");
-    if (audioData) {
-      try {
-        const data = JSON.parse(audioData);
+    if (!audioData) {
+      window.location.href = "player.html";
+      return;
+    }
+
+    try {
+      const data = JSON.parse(audioData);
         const fallbackTrack = {
           src: data.src,
           title: data.title,
@@ -1295,9 +1308,9 @@ window.addEventListener("DOMContentLoaded", () => {
           volume: Number(data.volume),
           muted: Boolean(data.muted),
         });
-      } catch (err) {
-        console.warn("Could not load theater audio handoff:", err.message);
-      }
+    } catch (err) {
+      console.warn("Could not load theater audio handoff:", err.message);
+      window.location.href = "player.html";
     }
   } else if (urlParams.get("from") === "room") {
     window.immersiveTheater.setVisualizerMode(urlParams.get("visual") || "blend");

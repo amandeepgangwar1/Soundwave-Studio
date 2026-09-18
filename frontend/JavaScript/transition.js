@@ -25,7 +25,7 @@
       setTimeout(() => {
         overlay.classList.remove("active");
         resolve();
-      }, 3000);
+      }, 650);
     });
   };
 })();

@@ -7,7 +7,7 @@
     "admin-login.html": { previous: "index.html", next: "admin-signup.html" },
     "admin-signup.html": { previous: "admin-login.html" },
     "shared-playlist.html": { previous: "browse.html", next: "login.html" },
-    "home.html": { previous: "browse.html", next: "search.html" },
+    "home.html": { previous: "browse.html", next: "player.html" },
     "search.html": { previous: "home.html", next: "artists.html" },
     "artists.html": { previous: "search.html", next: "library.html" },
     "library.html": { previous: "artists.html", next: "playlist.html" },
@@ -24,12 +24,17 @@
   };
 
   function currentPage() {
-    let path = window.location.pathname.replace(/\\/g, "/");
-    path = decodeURIComponent(path.substring(path.lastIndexOf("/") + 1)) || "index.html";
-    if (window.location.pathname.includes("/sections/")) {
-      return `sections/${path}`;
+    const path = decodeURIComponent(window.location.pathname.replace(/\\/g, "/"));
+    const frontendIndex = path.lastIndexOf("/frontend/");
+    const relativePath = frontendIndex >= 0
+      ? path.slice(frontendIndex + "/frontend/".length)
+      : path.slice(path.lastIndexOf("/") + 1);
+
+    if (frontendIndex < 0 && path.includes("/sections/")) {
+      return `sections/${relativePath}`;
     }
-    return path;
+
+    return relativePath || "index.html";
   }
 
   function hrefFor(page) {
@@ -66,6 +71,42 @@
     document.head.appendChild(script);
   }
 
+  function ensureThemeToggle(topbar) {
+    if (document.getElementById("themeToggle")) return;
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.id = "themeToggle";
+    toggle.className = "button ghost theme-toggle-control";
+    toggle.setAttribute("aria-label", "Switch color theme");
+
+    const updateLabel = (mode) => {
+      const isLight = mode === "light";
+      toggle.textContent = isLight ? "Dark mode" : "Light mode";
+      toggle.setAttribute("aria-pressed", String(isLight));
+    };
+
+    updateLabel(document.body?.dataset.themeMode || localStorage.getItem("sw_theme") || "dark");
+    window.addEventListener("soundwave:theme-change", (event) => {
+      updateLabel(event.detail?.theme?.mode || "dark");
+    });
+    toggle.addEventListener("click", () => {
+      const currentMode = document.body?.dataset.themeMode || localStorage.getItem("sw_theme") || "dark";
+      const nextMode = currentMode === "light" ? "dark" : "light";
+      if (window.SoundwaveThemeSystem?.setMode) {
+        window.SoundwaveThemeSystem.setMode(nextMode);
+      } else {
+        localStorage.setItem("sw_theme", nextMode);
+        document.documentElement.dataset.themeMode = nextMode === "light" ? "light" : "";
+        document.body.dataset.themeMode = nextMode;
+      }
+      updateLabel(nextMode);
+    });
+
+    const actions = topbar.querySelector(".actions-end") || topbar;
+    actions.appendChild(toggle);
+  }
+
   function createControl(label, target, disabled, ariaLabel) {
     if (disabled) {
       const span = document.createElement("span");
@@ -97,6 +138,7 @@
     if (!topbar || topbar.querySelector(".global-page-nav")) return;
 
     removeOldControls(topbar);
+    ensureThemeToggle(topbar);
 
     const page = currentPage();
     const route = routes[page] || {};

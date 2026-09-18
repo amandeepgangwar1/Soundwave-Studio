@@ -7,7 +7,7 @@ function getPlaylistId() {
 async function requireAuth() {
   const res = await fetch("/api/me", { credentials: "include" });
   if (!res.ok) {
-    window.location.href = "/login.html";
+    window.location.href = window.SoundwaveAuthRedirect?.getLoginUrl() || "/login.html";
     return null;
   }
   return res.json();
@@ -43,11 +43,22 @@ function renderPlaylist(playlist) {
 
     item.querySelector('[data-action="like"]').addEventListener("click", async (event) => {
       event.stopPropagation();
-      const res = await fetch(`/api/library/songs/${song.id}/toggle`, {
-        method: "POST",
-        credentials: "include"
-      });
-      if (res.ok) event.currentTarget.textContent = "Liked";
+      const button = event.currentTarget;
+      button.disabled = true;
+      try {
+        const res = await fetch(`/api/library/songs/${song.id}/toggle`, {
+          method: "POST",
+          credentials: "include"
+        });
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          const liked = Boolean(data.liked);
+          button.textContent = liked ? "Liked" : "Like";
+          button.classList.toggle("active", liked);
+        }
+      } finally {
+        button.disabled = false;
+      }
     });
 
     item.querySelector('[data-action="play"]').addEventListener("click", (event) => {

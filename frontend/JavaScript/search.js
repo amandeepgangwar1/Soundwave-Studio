@@ -4,7 +4,7 @@ let lastResults = { songs: [], artists: [], albums: [], playlists: [], podcasts:
 async function requireAuth() {
   const res = await fetch("/api/me", { credentials: "include" });
   if (!res.ok) {
-    window.location.href = "/login.html";
+    window.location.href = window.SoundwaveAuthRedirect?.getLoginUrl() || "/login.html";
     return null;
   }
   return res.json();
@@ -46,10 +46,13 @@ async function toggleFollow(artistId) {
 }
 
 async function toggleLike(songId) {
-  await fetch(`/api/library/songs/${songId}/toggle`, {
+  const res = await fetch(`/api/library/songs/${songId}/toggle`, {
     method: "POST",
     credentials: "include"
   });
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => ({}));
+  return Boolean(data.liked);
 }
 
 function renderSongs(songs) {
@@ -228,8 +231,16 @@ async function init() {
     if (!song) return;
     if (button.dataset.action === "play") playSong(song);
     if (button.dataset.action === "like") {
-      await toggleLike(song.id);
-      button.textContent = "Liked";
+      button.disabled = true;
+      try {
+        const liked = await toggleLike(song.id);
+        if (liked !== null) {
+          button.textContent = liked ? "Liked" : "Like";
+          button.classList.toggle("active", liked);
+        }
+      } finally {
+        button.disabled = false;
+      }
     }
   });
 
