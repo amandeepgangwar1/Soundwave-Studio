@@ -135,7 +135,7 @@ http://localhost:3000
 
 The app uses a local Soundwave Test Gateway by default, so Premium activation works without a Razorpay or Stripe account. It records payment orders in MongoDB, marks the selected plan as paid, and upgrades the user account.
 
-For real money collection, connect a payment provider account and use the optional Razorpay order and verification endpoints already present in the backend.
+For real money collection, connect a payment provider account and use the optional Razorpay order and verification endpoints already present in the backend. You have to use your QR Code to receive payment.
 
 ## Deployment
 
