@@ -2,7 +2,7 @@
   <img src="frontend/img/soundwave.svg" alt="Soundwave Studio" width="84">
 </p>
 
-<h1 align="center">Soundwave Studio</h1>
+<h1 align="center">Soundwave Studio (Music Streaming Website)</h1>
 
 <p align="center">
   A full-stack music streaming web app with playlists, playback, user libraries, likes, uploads, and Render/Vercel deployment.
