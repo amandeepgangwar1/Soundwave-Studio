@@ -23,7 +23,7 @@ Soundwave Studio lets users browse curated music playlists, play tracks, save pl
 
 ## Highlights
 
-- Account signup and login with secure password hashing
+- Account signup and login with secure password hashing with bcrypt.js and cookie-parser
 - Email, phone, Google-labelled, and Facebook-labelled account creation paths
 - Cookie-based sessions
 - Guest playlist browsing
